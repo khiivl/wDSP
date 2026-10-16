@@ -1,0 +1,111 @@
+wDSP room measurement
+app 0.4.9.8 (vc25)
+MCU code=002121 (ST), sound processor=BU32107, tuner=TDA7708, path=I2S, capture effects the platform OFFERS (not what any given capture got): AEC=true NS=true AGC=false
+capture source: UNPROCESSED requested - QF firmware records it as MIC, which the policy gives AEC and NS; whether they stayed on is in the effects lines of this report
+board=uis7862s_1h10 platform=ums512 model=K706 android=13 (sdk 29)
+SCREEN & WINDOW TOPOLOGY
+  physical display (real) = 1280 x 720 px (rotation=0, hwrotation=90)
+  app viewport (display)  = 1280 x 720 px
+  display metrics (dm)    = 1280 x 720 px, density=1.00 (160 dpi), 1280 x 720 dp
+  configuration           = LANDSCAPE (w=1280dp, h=648dp, sw=720dp)
+  system dimensions (res) : status_bar=72 px, nav_bar_h=154 px, nav_bar_w=640 px
+  decor window on screen  : location=(0, 0), size=1280 x 720 px
+  visible display frame   : [0, 72 - 1280, 720] (size=1280 x 648 px)
+  window insets (system)  : top=72, bottom=0, left=0, right=0 px
+  window insets (stable)  : top=72, bottom=0, left=0, right=0 px
+  screensaver overlay cfg : bounds=1280 x 720 px, status_bar_used=72 px, offset_y=0 px
+  launcher                : none set, installed: com.android.launcher.black.blue|com.android.launcher.blueman|com.android.launcher.bustling.city|com.android.launcher.dark.tunnel|com.android.launcher.fantasy.purple|com.android.launcher.grassland|com.android.launcher.meet.again|com.android.launcher.morning.light|com.android.launcher.movablecell|com.android.launcher.plane|com.android.launcher.simple.blue|com.android.launcher.star.blue|com.android.launcher.swood.grain|com.android.launcher.undercurrent|com.android.settings
+  shell wm size           : Physical size: 1280x720
+  dumpsys window displays :
+    DisplayFrames w=1280 h=720 r=0
+    mStable=[0,72][1280,720]
+    mDock=[0,72][1280,720]
+    mContent=[0,72][1280,720]
+    mContentFrame=Rect(0, 0 - 1280, 72)
+  dumpsys window frames   :
+    Window #0 Window{48c904d u0 StatusBar}:
+    mFrame=[0,0][1280,72] last=[0,0][1280,72]
+    WindowStateAnimator{63df4ae StatusBar}:
+    mSurface=Surface(name=StatusBar)/@0xf8e3b49
+    mFrame=[153,0][665,72] last=[153,0][665,72]
+    mFrame=[0,72][1,73] last=[0,72][1,73]
+    mFrame=[1207,72][1280,145] last=[1207,72][1280,145]
+    mFrame=[0,72][0,72] last=[0,0][0,0]
+    mFrame=[0,720][1280,720] last=[0,0][0,0]
+    mFrame=[0,0][0,0] last=[0,0][0,0]
+    mFrame=[220,72][1060,720] last=[220,72][1060,720]
+    mFrame=[0,0][1280,720] last=[0,0][1280,720]
+    mFrame=[0,0][1280,720] last=[0,0][1280,720]
+    mFrame=[0,0][1280,768] last=[0,0][1280,768]
+
+microphone was already ours (input device at 48000 Hz)
+microphone placed: front centre  (lr -0.08, fr +0.86), on the head unit front panel, built in: behind a hole in a panel
+audio focus: granted
+preset=AutoEQ Harman (Центр) amplitude=0.25 sweep=6.0 s from 20 Hz (subwoofer from 15 Hz) up to 20000 Hz
+soundstage: Front center
+cabin body: far seating (minivan / bus, 90 cm), listening distance: 90 cm
+cabin: front pair + rear pair + subwoofer; 290 x 150 x 120 cm, closed, cabin gain below 59 Hz
+FINDINGS:
+  - [likely] rear left: declared but not heard. Check that the speaker is connected and plays; if the car has none there, untick it in the speaker layout.
+  - [likely] rear right: declared but not heard. Check that the speaker is connected and plays; if the car has none there, untick it in the speaker layout.
+  - [likely] the doors' midbass rolls off below about 63 Hz - the preset puts the door high-pass there, and the subwoofer takes over below it.
+  - [sure] the speakers stood only 13.2 dB above the cabin's noise at 80 Hz - 1.25 kHz, so the correction there was applied only in part. An air-con blower or a running engine does this: switch them off and measure again.
+
+rear left    arrival  1309.80 ms  clarity   3.8 dB  prominence       49  polarity -1  peak   -7.9 dBFS   NOT HEARD
+             suggested delay 0.0 ms (0 steps)
+             response dB: -29.1 -36.5 -34.9 -39.3 -24.1 -14.7 -13.6 -13.3 -22.5 -33.9 -47.0 -56.9 -57.1 -55.3 -61.3 -65.0
+             noise dB:    -41.6 -46.0 -37.8 -48.6 -45.4 -46.7 -39.2 -35.3 -32.6 -40.5 -37.1 -52.3 -57.8 -62.3 -67.2 -66.5
+             clean dB:    -29.4 -37.1 -38.1 -39.8 -24.1 -14.7 -13.6 -13.3 -22.9 -35.0 -59.0 -68.9 -65.6 -56.2 -62.6 -70.3
+             SNR dB:      12.5 9.4 2.9 9.3 21.3 32.0 25.6 22.0 10.2 6.6 -9.9 -4.6 0.7 7.0 5.9 1.5
+
+rear right   arrival  2625.90 ms  clarity   6.3 dB  prominence       66  polarity -1  peak   -7.7 dBFS   NOT HEARD
+             suggested delay 0.0 ms (0 steps)
+             response dB: -27.9 -43.2 -41.3 -44.4 -42.4 -33.8 -13.4 -15.2 -34.1 -31.3 -41.9 -46.8 -57.5 -67.2 -91.2 -119.8
+             noise dB:    -29.0 -37.7 -41.3 -46.3 -25.6 -34.6 -15.7 -23.4 -35.1 -46.7 -57.7 -53.8 -38.6 -59.0 -60.0 -66.0
+             clean dB:    -34.1 -55.2 -53.3 -49.0 -54.4 -41.4 -17.2 -15.9 -40.7 -31.4 -42.0 -47.8 -69.5 -79.2 -103.2 -120.0
+             SNR dB:      1.2 -5.5 0.0 1.9 -16.7 0.8 2.3 8.2 1.1 15.4 15.8 7.0 -18.9 -8.2 -31.2 -53.9
+
+front left   arrival  1046.33 ms  clarity  12.7 dB  prominence     6879  polarity +1  peak   -8.3 dBFS   heard directly
+             suggested delay 0.0 ms (0 steps)
+             response dB: -32.1 -15.3 -15.0 -20.0 -14.4 -8.3 -8.4 -8.3 -11.4 -17.0 -18.3 -17.7 -17.2 -24.8 -26.4 -40.7
+             noise dB:    -28.0 -40.9 -39.6 -37.8 -36.5 -33.8 -13.8 -20.3 -25.2 -26.6 -49.8 -58.9 -56.1 -62.5 -66.7 -65.4
+             clean dB:    -44.1 -15.4 -15.0 -20.0 -14.4 -8.3 -9.8 -8.6 -11.6 -17.5 -18.3 -17.7 -17.2 -24.8 -26.4 -40.7
+             SNR dB:      -4.1 25.6 24.6 17.9 22.1 25.5 5.4 12.0 13.8 9.6 31.5 41.3 38.8 37.7 40.3 24.7
+             GCC-PHAT:   +1.896 ms (1896.2 us, prominence 6879.4)
+
+front right  arrival  1044.43 ms  clarity  25.5 dB  prominence    40263  polarity +1  peak   -4.1 dBFS   heard directly
+             suggested delay 2.2 ms (4 steps)
+             response dB: -15.3 -11.3 -8.5 -6.3 -8.0 -5.4 -3.5 -7.5 -5.0 -6.2 -6.5 -6.3 -6.5 -6.6 -6.6 -6.6
+             noise dB:    -48.8 -45.5 -37.2 -47.6 -49.1 -26.4 -19.6 -17.9 -17.5 -17.4 -17.4 -17.3 -17.3 -17.4 -17.4 -17.5
+             clean dB:    -15.3 -11.4 -8.5 -6.3 -8.0 -5.5 -3.6 -7.9 -5.2 -6.6 -6.9 -6.7 -6.8 -6.9 -6.9 -7.0
+             SNR dB:      33.5 34.1 28.8 41.4 41.1 20.9 16.1 10.4 12.5 11.2 10.8 11.0 10.9 10.8 10.9 10.9
+             GCC-PHAT:   +0.000 ms (0.0 us, prominence 1000.0)
+
+subwoofer    arrival  1044.39 ms  clarity  20.6 dB  prominence    36720  polarity -1  peak   -3.8 dBFS   heard directly
+             suggested delay 4.0 ms (8 steps)
+             response dB: -26.7 -13.9 -10.8 -8.3 -4.7 -5.9 -1.7 -6.2 -4.0 -6.1 -6.2 -6.0 -6.1 -6.5 -6.5 -6.6
+             noise dB:    -39.5 -32.5 -17.6 -13.5 -11.0 -19.2 -17.0 -19.0 -18.2 -16.1 -17.2 -17.3 -17.3 -17.3 -17.4 -17.3
+             clean dB:    -26.9 -14.0 -11.9 -9.9 -5.9 -6.1 -1.8 -6.5 -4.2 -6.6 -6.5 -6.3 -6.4 -6.9 -6.9 -7.0
+             SNR dB:      12.8 18.6 6.7 5.2 6.3 13.3 15.3 12.8 14.2 10.0 11.1 11.4 11.2 10.8 10.9 10.7
+             GCC-PHAT:   -0.044 ms (-43.7 us, prominence 36720.0)
+
+Cabin silence dB:      -65.9 -69.3 -64.5 -71.3 -48.4 -47.3 -49.3 -60.6 -72.4 -76.8 -82.9 -89.8 -88.5 -95.9 -106.4 -110.0
+Deconv. noise (front right): -48.8 -45.5 -37.2 -47.6 -49.1 -26.4 -19.6 -17.9 -17.5 -17.4 -17.4 -17.3 -17.3 -17.4 -17.4 -17.5
+Mic compensation dB:   +31.7 +10.9 +2.5 +3.0 +1.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +0.0 +1.7 +10.0
+Cabin response dB:     +11.7 +3.9 -2.4 +0.8 -2.2 +0.3 +1.3 -1.3 -0.4 -2.2 -2.6 -2.4 -2.5 -2.9 -1.2 +7.0
+LF slope 20-80 Hz:     -5.4 dB/oct measured  (an input RC high-pass alone would give +4.4 at fc=72 Hz, +5.5 at fc=154 Hz)
+Avg SNR dB:            14.7 29.9 26.7 29.6 31.6 23.2 10.8 11.2 13.2 10.4 21.1 26.1 24.9 24.3 25.6 17.8
+EQ trust (0..1):       0.73 1.00 1.00 1.00 1.00 1.00 0.40 0.43 0.60 0.37 1.00 1.00 1.00 1.00 1.00 0.98
+Mic calibrated:       yes
+
+WIRING: the main channels heard directly are in phase with each other. The subwoofer is not compared: it plays through a 12 dB/oct low-pass that turns its own phase, and plenty of them are wired inverted on purpose, so its sign here says nothing about anybody's wiring.
+arrival order vs the cabin's geometry, 2 door speakers heard directly: as wired 1.10 ms RMS off, best swap front left <-> front right 0.80 ms -> the stated wiring stands (fit 0.45 ms, margin 0.35 ms)
+Soundstage mode: Front center
+Target sound curve: Harman Reference
+Midbass HPF: 63 Hz (idx 5)
+Subwoofer: Installed, LPF 63 Hz (idx 4), Gain +2 dB, Delay 4.0 ms (8 steps)
+Synthesized Auto-EQ (Harman Reference target), dB: +0 +0 +0 +2 +4 +0 +0 +0 +0 +0 +2 +2 +2 +2 +0 -4
+  same as hardware indices (6 = 0 dB, 2 dB a step): 6 6 6 7 8 6 6 6 6 6 7 7 7 7 6 4
+
+Band centres: 20 31.5 50 80 125 200 315 500 800 1250 2000 3150 5000 8000 12500 20000 Hz
+The response includes the microphone's own curve and is NOT a calibration.

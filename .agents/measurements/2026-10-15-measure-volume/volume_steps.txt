@@ -1,0 +1,34 @@
+volume steps: 1 kHz tone; steps 32..13 at amplitude 0.0048 (noise -80.0 dBFS), 13..1 at 0.0600 (noise -93.0 dBFS); dB against step 32
+  step  1    -63.1 dB     5.0 dB/step
+  step  2    -58.1 dB     6.1 dB/step
+  step  3    -52.0 dB     5.8 dB/step
+  step  4    -46.2 dB     5.3 dB/step
+  step  5    -40.9 dB     3.0 dB/step
+  step  6    -37.9 dB     3.0 dB/step
+  step  7    -34.9 dB     2.9 dB/step
+  step  8    -31.9 dB     2.2 dB/step
+  step  9    -29.7 dB     1.9 dB/step
+  step 10    -27.8 dB     2.2 dB/step
+  step 11    -25.6 dB     1.8 dB/step
+  step 12    -23.9 dB     1.9 dB/step
+  step 13    -21.9 dB     1.0 dB/step
+  step 14    -21.0 dB     0.9 dB/step
+  step 15    -20.0 dB     1.0 dB/step
+  step 16    -19.0 dB     1.0 dB/step
+  step 17    -18.0 dB     1.0 dB/step
+  step 18    -17.0 dB     1.0 dB/step
+  step 19    -16.0 dB     1.0 dB/step
+  step 20    -15.0 dB     1.0 dB/step
+  step 21    -14.0 dB     1.0 dB/step
+  step 22    -13.0 dB     1.0 dB/step
+  step 23    -12.0 dB     1.0 dB/step
+  step 24    -11.0 dB     1.0 dB/step
+  step 25    -10.0 dB     1.0 dB/step
+  step 26     -9.0 dB     1.0 dB/step
+  step 27     -8.0 dB     1.0 dB/step
+  step 28     -7.0 dB     1.5 dB/step
+  step 29     -5.5 dB     1.5 dB/step
+  step 30     -4.0 dB     1.5 dB/step
+  step 31     -2.5 dB     2.5 dB/step
+  step 32     +0.0 dB       - dB/step
+kept as volume_step_db

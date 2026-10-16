@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    DESIGN SIZE OF THE FADER GROUP ON WIDE PANELS (1000dp and up).
+
+    The group - the car with its arrows and numbers - is laid out at this size and then scaled whole
+    by ScaleToFitLayout. The base value in values/dimens.xml is the narrow case (400dp), because half
+    of a 600dp Tesla panel is 300dp and a 640dp group there had to shrink to 0.47: arrows 17dp,
+    numbers about 8sp, measured on the unit 12.09.2026.
+
+    Here there is room for the full drawing, and the reference 1280x720 keeps exactly the geometry it
+    has always had. Width only: the height stays 648dp everywhere, and what does not fit vertically
+    scrolls, which is the rule the bass card on the left half of that tab already follows.
+-->
+<resources>
+    <dimen name="fader_group_width">640dp</dimen>
+</resources>

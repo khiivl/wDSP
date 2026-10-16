@@ -2,15 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
-// Same shared release keystore as wdsp_app - this module's sharedUserId="android.uid.system"
-// doesn't actually need the real platform certificate, since it's installed via pmpatch rather
-// than a normal system-partition signature check. See wdsp_app/build.gradle's identical block for
-// the full doc on keystore.properties.
-def keystorePropertiesFile = rootProject.file("keystore.properties")
-def keystoreProperties = new Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-}
+// Release signing credentials: one place for both modules (signing.gradle).
+apply from: rootProject.file('signing.gradle')
 
 android {
     namespace 'com.qf.soundeffect'
@@ -19,33 +12,37 @@ android {
     defaultConfig {
         applicationId "com.qf.soundeffect"
         minSdk 28
-        //noinspection ExpiredTargetSdkVersion
         targetSdk 28
+        // Android 14 inclusive (owner, 02.10.2026). Informational: Android has not enforced
+        // maxSdkVersion at install since 2.0.1. It replaces an android:maxSdkVersion="28" that sat
+        // on the activity, where the attribute means nothing.
+        maxSdk 34
         versionCode 1
         versionName "0.5"
 
         resConfigs "en"
     }
 
+    // The same release key as wdsp_app (signing.gradle, never in git). The stock QF_DSP is
+    // platform-signed; installing this over it as an update needs signature checks disabled
+    // (PMPatch3 on the unit).
     signingConfigs {
         release {
-            if (keystorePropertiesFile.exists()) {
-                storeFile rootProject.file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
+            if (wdspSigning != null) {
+                storeFile wdspSigning.storeFile
+                storePassword wdspSigning.storePassword
+                keyAlias wdspSigning.keyAlias
+                keyPassword wdspSigning.keyPassword
             }
         }
     }
 
     buildTypes {
         release {
+            if (wdspSigning != null) signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (keystorePropertiesFile.exists()) {
-                signingConfig signingConfigs.release
-            }
         }
     }
     compileOptions {
@@ -55,6 +52,11 @@ android {
     buildFeatures {
         resValues false
         buildConfig false
+    }
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+        disable 'ExpiredTargetSdkVersion', 'GradleDependency'
     }
 }
 

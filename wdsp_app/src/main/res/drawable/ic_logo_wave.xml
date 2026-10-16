@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="36dp"
+    android:height="24dp"
+    android:viewportWidth="36"
+    android:viewportHeight="24">
+    <!-- Smooth acoustic sine wave mark -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1FE7C4"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M3,16 C6,16 8,4 13,4 C18,4 20,18 26,18 C30,18 32,12 34,12" />
+</vector>

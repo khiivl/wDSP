@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wDSP Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a printed car-audio manual — a sticky contents rail on the left, one reading column, the head unit's own units (dB, Hz, volume step 1–32) set in mono. */
+:root {
+  --bg: #f6f7f8;
+  --paper: #ffffff;
+  --ink: #1b2226;
+  --muted: #5a666d;
+  --rule: #dde2e5;
+  --accent: #0b6e86;
+  --accent-soft: #e2f1f5;
+  --warn: #9a5a00;
+  --warn-soft: #fbf0df;
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171a; --paper: #182025; --ink: #e4eaed; --muted: #9aa8af; --rule: #2a353b;
+    --accent: #5fc3dc; --accent-soft: #15323b; --warn: #f0b45c; --warn-soft: #33270f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171a; --paper: #182025; --ink: #e4eaed; --muted: #9aa8af; --rule: #2a353b;
+  --accent: #5fc3dc; --accent-soft: #15323b; --warn: #f0b45c; --warn-soft: #33270f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 1rem; line-height: 1.6; }
+.wrap { max-width: 72rem; margin: 0 auto; padding-inline: 16px; padding-block: 2rem 4rem; display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 3rem; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; } nav.toc { position: static; } }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 1.5rem); align-self: start; font-size: .9rem; }
+nav.toc .label { font-family: var(--font-display); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+nav.toc ol { list-style: none; padding: 0; margin: .75rem 0 0; display: grid; gap: .35rem; }
+nav.toc a { color: var(--ink); text-decoration: none; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent); text-decoration: underline; }
+main { min-width: 0; }
+header.top { padding-block: 1rem 2rem; border-bottom: 1px solid var(--rule); }
+header.top .eyebrow { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: .5rem 0 1rem; text-wrap: balance; }
+header.top p { max-width: 62ch; color: var(--muted); font-size: 1.05rem; margin: 0; }
+section { padding-block: 2.25rem .5rem; border-bottom: 1px solid var(--rule); }
+section:last-of-type { border-bottom: 0; }
+h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; line-height: 1.25; margin: 0 0 1rem; text-wrap: balance; }
+h3 { font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 .4rem; }
+p, li { max-width: 66ch; }
+p { margin: 0 0 .9rem; }
+ul, ol { padding-left: 1.25rem; margin: 0 0 1rem; display: grid; gap: .35rem; }
+a { color: var(--accent); }
+.ui { font-weight: 600; white-space: nowrap; }
+.val { font-family: var(--font-mono); font-size: .88em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.steps { list-style: none; padding: 0; counter-reset: step; display: grid; gap: 1.25rem; }
+.steps > li { counter-increment: step; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: .75rem; max-width: none; }
+.steps > li::before { content: counter(step); font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; color: var(--accent); background: var(--accent-soft); border-radius: 50%; width: 2.25rem; height: 2.25rem; display: grid; place-items: center; }
+.steps h3 { margin-top: .25rem; }
+.note { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: .75rem 1rem; margin: 1rem 0; max-width: 66ch; }
+.note p:last-child { margin: 0; }
+.note .k { color: var(--warn); font-weight: 600; }
+.tablebox { overflow-x: auto; margin: 1rem 0 1.25rem; border: 1px solid var(--rule); background: var(--paper); }
+table { border-collapse: collapse; width: 100%; min-width: 40rem; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: .6rem .75rem; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--font-display); font-weight: 500; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+dl.tabs { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); gap: .6rem 1.25rem; margin: 0 0 1rem; }
+@media (max-width: 560px) { dl.tabs { grid-template-columns: minmax(0, 1fr); gap: .2rem; } dl.tabs dd { margin-bottom: .8rem; } }
+dl.tabs dt { font-weight: 600; }
+dl.tabs dd { margin: 0; max-width: 62ch; }
+.scale { font-family: var(--font-mono); font-size: .85rem; background: var(--paper); border: 1px solid var(--rule); padding: .75rem 1rem; overflow-x: auto; white-space: pre; margin: .5rem 0 1rem; }
+footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
+@media (max-width: 860px) { nav.toc { position: static; } }
+</style>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Table of contents">
+    <div class="label">Contents</div>
+    <ol>
+      <li><a href="#about">About the app</a></li>
+      <li><a href="#first">First run</a></li>
+      <li><a href="#order">Setup sequence</a></li>
+      <li><a href="#calibrations">What gets calibrated and why</a></li>
+      <li><a href="#tabs">Main screen tabs</a></li>
+      <li><a href="#spectrum">Spectrum and RTA</a></li>
+      <li><a href="#presets">Presets and automation</a></li>
+      <li><a href="#looks">Widget and screensaver</a></li>
+      <li><a href="#trouble">Troubleshooting</a></li>
+      <li><a href="#send">Sharing measurements</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="top">
+      <div class="eyebrow">wDSP · kostyamat mod · QF / K706 head units</div>
+      <h1>wDSP Manual</h1>
+      <p>Everything inside the app, the right order to tune it, what it measures and why. Written for the driver, not the programmer.</p>
+    </header>
+
+    <section id="about">
+      <h2>About the app</h2>
+      <p>In QF head units, audio output from Android passes through a dedicated <span class="val">ROHM BU32107</span> sound processor. wDSP controls it via the head unit's MCU: the equalizer, door speaker filters, subwoofer, delay channels, and fader. The factory DSP app controls the same chip, but offers far less control.</p>
+      <p>It is worth understanding early on what the processor can and cannot do:</p>
+      <ul>
+        <li>one shared equalizer for all speakers: <span class="val">16</span> bands from <span class="val">20 Hz</span> to <span class="val">20 kHz</span>, <span class="val">2 dB</span> steps, <span class="val">±12 dB</span> limits, with fixed Q factor;</li>
+        <li>no independent EQ per left or right speaker;</li>
+        <li>the subwoofer has dedicated crossover filtering, gain, and delay; door speakers have high-pass filtering and bass boost.</li>
+      </ul>
+      <p>Because of this, cabin acoustic measurement focuses primarily on detecting <b>faults</b>: swapped wires, out-of-phase speakers, unbalanced channels, and door resonances. The equalizer applies broad, sensible corrections. On this hardware platform, textbook flat response down to a decibel does not exist, and the app will not promise it.</p>
+    </section>
+
+    <section id="first">
+      <h2>First run</h2>
+      <p>On initial launch, the app opens the <span class="ui">Permissions Wizard</span>. Enable each permission using the <span class="ui">Grant</span> button next to it:</p>
+      <ul>
+        <li><span class="ui">Microphone</span> — cabin acoustic measurement and real-time spectrum in Microphone mode;</li>
+        <li><span class="ui">Display over other apps</span> — status bar visualizer widget and full-screen screensaver;</li>
+        <li><span class="ui">Notification access</span> — media track title and album art retrieval;</li>
+        <li><span class="ui">Location / GPS</span> — GALA speed-dependent volume adjustment;</li>
+        <li><span class="ui">Background work</span> — prevents Android from terminating the persistent service managing the DSP processor.</li>
+      </ul>
+      <p>Root access (Magisk) is optional. When available, it allows the app to cleanly acquire exclusive microphone access from voice assistants prior to sweep runs.</p>
+    </section>
+
+    <section id="order">
+      <h2>Setup sequence</h2>
+      <p>Sequence matters: each step builds upon findings from the previous. Perform all microphone-assisted steps inside the car: doors closed, engine off, silent cabin.</p>
+      <ol class="steps">
+        <li><div>
+          <h3>Describe your car</h3>
+          <p><span class="ui">wDSP Settings</span> → <span class="ui">Cabin Acoustic Calibration & Auto-Presets</span>. Here you answer setup parameters that dictate how sweeps are interpreted:</p>
+          <ul>
+            <li><span class="ui">The cabin</span>: <span class="ui">Closed (a car)</span> or <span class="ui">Open (bench, cabriolet)</span>. A closed vehicle cabin naturally amplifies deep bass (cabin gain), which the synthesis model takes into account;</li>
+            <li>cabin length, width, and height;</li>
+            <li><span class="ui">Where the microphone is</span> and <span class="ui">What surrounds the capsule</span>: affects high-frequency acoustic calibration;</li>
+            <li>whether a subwoofer is present and <span class="ui">Where the subwoofer is</span>.</li>
+          </ul>
+        </div></li>
+        <li><div>
+          <h3>Calibrate the microphone</h3>
+          <p>Tap <span class="ui">Calibrate Microphone</span>. Head unit microphones are not lab instruments: their response at extreme lows and highs differs noticeably from human hearing. Calibration profiles the capsule so microphone colorations are not mistakenly attributed to your car.</p>
+          <p>What happens during this ~1-minute pass:</p>
+          <ul>
+            <li><b>level check</b> — a brief multi-speaker burst to align sweep output with your microphone's sensitivity;</li>
+            <li><b>sweeps</b> — smooth sine sweeps from low to high frequencies through each speaker and subwoofer in turn;</li>
+            <li><b>volume steps</b> — about <span class="val">20 s</span> of a quiet reference tone while volume steps automatically from <span class="val">32</span> down to <span class="val">1</span>. This measures the exact decibel drop of each volume step on your head unit.</li>
+          </ul>
+          <p>Run this once. Repeat only if you reposition the microphone or swap the amplifier.</p>
+        </div></li>
+        <li><div>
+          <h3>Measure the cabin and create a preset</h3>
+          <p>Tap <span class="ui">Calibrate Cabin & Create Preset</span>. The wizard prompts for four final choices:</p>
+          <ul>
+            <li><span class="ui">Subwoofer Configuration</span> — whether the sub is active;</li>
+            <li><span class="ui">Target Sound Profile</span>: <span class="ui">Harman</span> (warm, standard automotive target), <span class="ui">Dolby Atmos</span>, <span class="ui">Club / Bass Heavy</span>, <span class="ui">Vocal / Podcast</span>, or <span class="ui">Studio Flat</span>;</li>
+            <li><span class="ui">Soundstage focus</span> — Driver seat, Front center, Cabin center, or No delays;</li>
+            <li><span class="ui">Distance from microphone to ears</span>.</li>
+          </ul>
+          <p>Set the volume to your usual listening level before measuring: the new preset's loudness compensation anchors to it. The measurement pass picks its own volume automatically. The stages progress as follows:</p>
+          <ul>
+            <li><b>volume selection</b>, about <span class="val">4 s</span>: silence, then a dual test tone <span class="val">80 Hz + 1 kHz</span>. The app selects a step between <span class="val">6</span> and <span class="val">18</span> where bass rises clear above cabin noise without distortion. A noisy cabin does not abort the pass: ambient noise is recorded into the report;</li>
+            <li>noise floor recording;</li>
+            <li>individual speaker sweeps;</li>
+            <li>time-alignment delay calculation;</li>
+            <li>preset synthesis;</li>
+            <li><b>control sweep</b> — all speakers simultaneously through the synthesized preset. This confirms whether the sub and door mid-bass sum in phase or cancel at the crossover point.</li>
+          </ul>
+        </div></li>
+        <li><div>
+          <h3>Review findings and apply</h3>
+          <p>The <span class="ui">Calibration Results & Auto-EQ</span> report details your system's acoustics:</p>
+          <ul>
+            <li><span class="ui">What the measurement found</span> — detected acoustic faults flagged as <span class="ui">Certain</span>, <span class="ui">Likely</span>, or <span class="ui">Possibly</span>, with actionable remedies;</li>
+            <li>crossover frequency — where door speakers hand low frequencies over to the subwoofer;</li>
+            <li>channel delay settings;</li>
+            <li>synthesized Auto-EQ correction curve.</li>
+          </ul>
+          <p>Bottom actions:</p>
+          <ul>
+            <li><span class="ui">Apply Auto-EQ</span> — saves and activates the synthesized preset;</li>
+            <li><span class="ui">Save Archive (.zip)</span> — saves full diagnostic data to share with us;</li>
+            <li><span class="ui">Close</span> — exit without changing current DSP settings.</li>
+          </ul>
+          <p>Subwoofer phase suggestions (<span class="val">0/180</span> switch or wiring swap) only appear if the control sweep physically proved phase cancellation.</p>
+        </div></li>
+        <li><div>
+          <h3>Tune loudness compensation</h3>
+          <p>Open the <span class="ui">Loudness</span> tab. Human hearing perceives bass less efficiently at low listening levels. Loudness progressively boosts low frequencies as you lower the volume.</p>
+          <ul>
+            <li><span class="ui">Calibration point</span> — volume step above which loudness applies zero boost. For measured presets, it anchors to the normal listening volume at which you launched the measurement. If that was lower than the measurement sweep volume, the app sets an anchor <span class="val">18 dB</span> louder than your listening level, between steps <span class="val">16</span> and <span class="val">24</span>;</li>
+            <li><span class="ui">Correction intensity</span> — scaling factor applied to the equal-loudness curve.</li>
+          </ul>
+          <p>The app computes attenuation in actual decibels measured during step 2 rather than arbitrary volume steps. An automated validator at the bottom inspects settings: if any parameter conflicts, tap <span class="ui">Set it correctly</span> to fix it instantly.</p>
+        </div></li>
+        <li><div>
+          <h3>Capture RTA zero</h3>
+          <p>Open <span class="ui">Audio Check</span> → <span class="ui">Pink Noise</span> → <span class="ui">RTA zero</span>. This establishes a fixed reference baseline for the real-time analyzer curve instead of a floating average.</p>
+          <p>A single tap captures both zero references, Music and Microphone, regardless of the active display mode. For several seconds, the app temporarily sets the volume at which the microphone was calibrated, then restores your previous volume. The microphone zero locks to that step, so the curve no longer drifts when you adjust volume.</p>
+        </div></li>
+        <li><div>
+          <h3>Sync visualizer with audio playback</h3>
+          <p><span class="ui">wDSP Settings</span> → <span class="ui">Sound sync</span> → <span class="ui">Synchronise</span>. The app calculates audio pipeline latency relative to screen rendering on your hardware. Spectrum bars will then bounce tightly in sync with the beat.</p>
+        </div></li>
+      </ol>
+    </section>
+
+    <section id="calibrations">
+      <h2>What gets calibrated and why</h2>
+      <p>The app includes five distinct calibration procedures. They serve completely different purposes:</p>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>Target</th><th>Where to run</th><th>What it determines</th><th>What it affects</th><th>When to repeat</th></tr></thead>
+          <tbody>
+            <tr><td>Microphone</td><td>Settings → Calibrate Microphone</td><td>How the built-in microphone perceives low and high frequencies vs human ear</td><td>Cabin measurement, Microphone spectrum mode</td><td>New microphone or modified mounting</td></tr>
+            <tr><td>Volume steps</td><td>Automatic, during microphone calibration</td><td>Exact decibel drop for steps <span class="val">1…32</span> on your specific head unit and amplifier</td><td>Loudness compensation, microphone RTA scaling</td><td>Whenever calibrating microphone</td></tr>
+            <tr><td>Cabin</td><td>Settings → Calibrate Cabin & Create Preset</td><td>Acoustic faults, delays, crossover, and Auto-EQ profile for your vehicle</td><td>New Auto-EQ preset</td><td>Replaced speakers, subwoofer, or sound deadening</td></tr>
+            <tr><td>RTA zero</td><td>Audio Check → Pink Noise → RTA zero</td><td>Stable baseline reference for real-time spectrum visualization</td><td>Visual display only</td><td>After calibrating the microphone; does not alter audio processing</td></tr>
+            <tr><td>Sound sync</td><td>Settings → Sound sync</td><td>Audio delay relative to display rendering</td><td>Visual display only</td><td>Following firmware updates or audio module changes</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The loudness calibration point is a configuration threshold rather than an automated sweep pass: it is set either by the measurement wizard or adjusted manually.</p>
+    </section>
+
+    <section id="tabs">
+      <h2>Main screen tabs</h2>
+      <dl class="tabs">
+        <dt>Equalizer</dt>
+        <dd>16 bands, preset selector at the top, and a <span class="ui">Subwoofer</span> section: low-pass cutoff frequency and gain. Each slider represents dB change at that band center. Adjacent bands overlap smoothly with proper summing so three consecutive <span class="val">+4</span> sliders produce a uniform <span class="val">+4</span> shelf rather than an exaggerated bump. The curve displays the exact response sent to the DSP hardware.</dd>
+        <dt>Loudness</dt>
+        <dd>Equal-loudness compensation (<span class="ui">Loudness</span>), threshold point, and boost depth. <span class="ui">Sub compensation</span> extends loudness boost to the subwoofer. <span class="ui">Trim Highs</span> softens treble harshness at high volumes. <span class="ui">Ultra Bass</span> provides an extra low-end lift below a selectable volume threshold. The preview graph illustrates the exact dynamic boost curve.</dd>
+        <dt>Delays</dt>
+        <dd>Per-channel time alignment in milliseconds and centimeters so sound waves from all speakers arrive at your ears simultaneously. Calculated automatically during cabin calibration. <span class="ui">Move fronts together</span> / <span class="ui">Move rears together</span> preserve inter-channel delay offsets while adjusting pairs. Also houses <span class="ui">Surround</span> and <span class="ui">Rear-Fill</span> processing.</dd>
+        <dt>Other</dt>
+        <dd>Door speaker bass tuning: high-pass <span class="ui">Filter</span> prevents door rattle and offloads bass to the subwoofer; <span class="ui">Boost</span> enhances selectable bass frequencies. Separate front and rear controls; <span class="ui">Same as front</span> mirrors front settings. Also includes fader and balance controls.</dd>
+        <dt>GALA</dt>
+        <dd>Speed-dependent volume compensation via GPS to overcome road noise. <span class="ui">Speed step</span> sets the speed interval, <span class="ui">Activation Threshold</span> sets engagement speed, and <span class="ui">Max Compensation</span> defines the gain ceiling. Automatically suspended during phone calls.</dd>
+        <dt>Audio Check</dt>
+        <dd>Auditory verification signals: song stems (isolated bass, vocals, drums, melody) in any playback combination, calibrated pink noise, sine generator, sweep tone, sequential per-speaker checks, and <span class="ui">Only Sub</span> mode. All signals pass through the active preset. Fader and sub-solo settings apply temporarily during testing and do not alter saved presets.</dd>
+      </dl>
+    </section>
+
+    <section id="spectrum">
+      <h2>Spectrum and RTA</h2>
+      <p>The <span class="ui">Spectrum</span> switch above the equalizer has three positions. In Settings you choose whether it is drawn as bars or as a live curve.</p>
+      <dl class="tabs">
+        <dt>Off</dt>
+        <dd>No spectrum on the main screen. The status bar widget and the screensaver keep working.</dd>
+        <dt>Music</dt>
+        <dd>The music that is playing, as the current preset shapes it: <b>what the preset is meant to sound like</b>. It does not depend on the volume.</dd>
+        <dt>Microphone</dt>
+        <dd><b>What the cabin actually sounds like</b>, heard by the unit's microphone, on the same scale as Music. Where the two curves differ, the car is adding or taking something away.</dd>
+      </dl>
+      <p>FM radio does not pass through Android, so in Music mode the radio has no spectrum; the Microphone mode works with the radio too.</p>
+    </section>
+
+    <section id="presets">
+      <h2>Presets and automation</h2>
+      <ul>
+        <li>Preset manager on the main screen: create, rename, delete, export, and import.</li>
+        <li><span class="ui">Preset Automation</span> binds specific presets to media apps: radio uses one profile, Bluetooth streaming another. A dedicated profile handles <span class="ui">Phone Call</span>. <span class="ui">Global Default</span> applies whenever no app binding matches.</li>
+        <li>Volume is stored independently per source, matching native head unit behavior.</li>
+        <li><span class="ui">Backup All Settings</span> and <span class="ui">Restore Settings</span>: backs up full configuration with presets or settings alone.</li>
+        <li><span class="ui">Resume the player after a restart</span> and <span class="ui">Resume the player after sleep</span>: the player that was playing comes back on its own, without its window jumping on top of the navigator. Radio restores itself. For sleep, press <span class="ui">Let wDSP stay alive through sleep</span> and enable wDSP in the list that opens.</li>
+      </ul>
+    </section>
+
+    <section id="looks">
+      <h2>Widget and screensaver</h2>
+      <p><span class="ui">Status Bar Visualizer</span> — embedded mini-spectrum in the Android status bar: adjustable width, horizontal offset, height, visualization style (Classic bars, Outrun, VU meter, Oscilloscope), and color palettes.</p>
+      <p><span class="ui">Screensaver</span> — full-screen visualizer when the unit is idle: configurable timeout, Day/Night brightness profiles, and app exclusion blacklist. The navigator chosen in the head unit settings is never covered. <span class="ui">Cover the status bar</span> decides whether the screensaver hides the status bar. Its controls are on the map below.</p>
+      <figure style="margin:1.5rem 0 1rem;">
+        <img src="screensaver_map.svg" alt="Screensaver touch map: taps on the left, drags on the right" style="width:100%;max-width:900px;display:block;">
+        <figcaption style="font-size:0.85rem;color:var(--muted);margin-top:0.5rem;">Screensaver touch map: taps (left) and drag gestures (right).</figcaption>
+      </figure>
+      <h3>Screensaver touch zones</h3>
+      <p><b>Taps (left diagram):</b></p>
+      <ul>
+        <li><b>1</b> — upper half: dismiss screensaver;</li>
+        <li><b>2</b> — lower half, left third (to the outer edge): previous track;</li>
+        <li><b>3</b> — middle zone: play / pause;</li>
+        <li><b>4</b> — right third (to the outer edge): next track;</li>
+        <li><b>5</b> — album art / player icon (bottom-left): open playing media player or radio;</li>
+        <li><b>6</b> — style button (bottom-right): tap cycles visualizer style; long press (1 s) opens wDSP equalizer.</li>
+      </ul>
+      <p><b>Drags (right diagram)</b> — what changes depends on the edge the finger starts at. Drag in any direction; up or right is more. The setting is kept when you lift the finger:</p>
+      <ul>
+        <li><b>7</b> — from top edge: backdrop dimming (transparency);</li>
+        <li><b>8</b> — from bottom edge: visualizer width;</li>
+        <li><b>9</b> — from left edge: visualizer height;</li>
+        <li><b>10</b> — from right edge: brightness (stored separately for day and night);</li>
+        <li><b>11</b> — from center: system volume (entire screen corresponds to full 0–32 scale).</li>
+      </ul>
+      <p><span class="ui">UI Style</span>: <span class="ui">Classic (Original)</span> — original author interface layout; <span class="ui">Modern</span> — refreshed responsive design. Both styles support native Day and Night themes.</p>
+    </section>
+
+    <section id="trouble">
+      <h2>Troubleshooting</h2>
+      <h3>"Microphone temporarily busy, using calculated spectrum"</h3>
+      <p>Another app holds exclusive microphone access, most commonly Google Assistant. Reboot the head unit: wDSP initializes early to claim the microphone first. On rooted units, wDSP acquires the handle automatically.</p>
+      <h3>Measurement reports "measured in noise"</h3>
+      <p>The cabin was not quiet enough. The app selects sweep volume automatically, so reduce cabin noise: shut all doors and windows, turn off the engine and climate fan, and measure again.</p>
+      <h3>Volume steps failed to record</h3>
+      <p>Transient noise interrupted the tone sequence, or the microphone failed to register the level check. The app retains previously calibrated step tables; without a table, it falls back to nominal steps. Run the microphone calibration again in a quiet cabin.</p>
+      <h3>Microphone RTA baseline drifts when adjusting volume</h3>
+      <p>Microphone RTA zero was calibrated before volume-tracking was enabled. Re-zero RTA on pink noise (step 6).</p>
+      <h3>Red "Microphone overloaded" warning above the equalizer</h3>
+      <p>The microphone signal is so loud it clips against the ceiling, most often on heavy bass. While overloaded, the microphone curve is displayed with AGC: its level is matched to the Music curve and the shape is approximate. Once the level drops, the warning disappears and the curve returns to its calibrated zero. If the warning appears even at normal listening volume, lower microphone sensitivity in head unit settings.</p>
+      <h3>Audio tone changes after reboot</h3>
+      <p>DSP parameters are restored at boot by the background service without launching the UI. Ensure <span class="ui">Background work</span> is granted and wDSP is allowed to <span class="ui">stay alive during sleep</span>.</p>
+    </section>
+
+    <section id="send">
+      <h2>Sharing measurements</h2>
+      <p>After completing cabin calibration, tap <span class="ui">Save Archive (.zip)</span>. The archive packages measurement logs, microphone response data, volume step calibrations, and a synchronized system bugreport.</p>
+      <p>Send the archive, the system report (<span class="ui">Diagnostics</span> → <span class="ui">System report</span>) and a few words on how the sound changed to the mod's group: <a href="https://t.me/kostyamat_dev/92" target="_blank" rel="noopener">t.me/kostyamat_dev/92</a>. The author's original app has no cabin measurement, so measurements go to the mod's group. The original project: <a href="https://t.me/wDSPapp" target="_blank" rel="noopener">t.me/wDSPapp</a>.</p>
+      <p>Include your car's make, model, microphone position, and amplifier configuration when posting.</p>
+    </section>
+
+    <footer>
+      Manual for wDSP 1.1 "Bulldozer" mod, 15.10.2026. wDSP — by Volodymyr Chebanenko (khiivl); mod — Kostiantyn Matviyevskyy.
+    </footer>
+  </main>
+</div>

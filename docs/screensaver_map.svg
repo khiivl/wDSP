@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 370" role="img" aria-label="Screensaver touch map: taps on the left, drags on the right">
+<!-- Geometry from ScreensaverManager: taps above TRANSPORT_FROM (0.50) put the screensaver away;
+     below it the transport thirds are split inside the band free of the EDGE_F (0.18) margins,
+     so the outer thirds run to the screen edges; drags pick the nearest edge within EDGE_F,
+     corners split on the diagonal, the middle is the volume. -->
+<style>
+  .scr { fill: #ffffff; stroke: #5b6b73; stroke-width: 2; }
+  .sb  { fill: #d9dee1; }
+  .bar { fill: #e7ecee; stroke: #5b6b73; stroke-width: 1; }
+  .up  { fill: #e2f1f5; }
+  .t1  { fill: #cfe8d6; } .t2 { fill: #f6e3c4; } .t3 { fill: #cfe8d6; }
+  .e   { fill: #dfe3f6; stroke: #5b6b73; stroke-width: 1; }
+  .vol { fill: #f3d9df; stroke: #5b6b73; stroke-width: 1; }
+  .ln  { stroke: #5b6b73; stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+  .arr { stroke: #2b3a40; stroke-width: 2.5; fill: none; marker-start: url(#a); marker-end: url(#a); }
+  .num { fill: #0b6e86; } .numt { fill: #ffffff; font: 700 15px sans-serif; text-anchor: middle; dominant-baseline: central; }
+  .ttl { fill: #2b3a40; font: 600 15px sans-serif; text-anchor: middle; }
+  .gl  { fill: #2b3a40; font: 700 22px sans-serif; text-anchor: middle; dominant-baseline: central; }
+  .btn { fill: #0b6e86; } .cov { fill: #9fb3bb; stroke: #5b6b73; }
+  @media (prefers-color-scheme: dark) {
+    .scr { fill: #182025; stroke: #9aa8af; } .sb { fill: #2a353b; } .bar { fill: #1f2a30; stroke: #9aa8af; }
+    .up { fill: #15323b; } .t1, .t3 { fill: #1d3a27; } .t2 { fill: #3d3016; }
+    .e { fill: #24294a; stroke: #9aa8af; } .vol { fill: #43242c; stroke: #9aa8af; }
+    .ln { stroke: #9aa8af; } .arr { stroke: #e4eaed; } .ttl, .gl { fill: #e4eaed; }
+    .num, .btn { fill: #5fc3dc; } .numt { fill: #11171a; } .cov { fill: #4c5d64; stroke: #9aa8af; }
+    marker path { fill: #e4eaed; }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#2b3a40"/>
+  </marker>
+</defs>
+
+<!-- ============ TAP ============ -->
+<text class="ttl" x="250" y="22">☝</text>
+<rect class="scr" x="20" y="40" width="460" height="300" rx="10"/>
+<rect class="sb" x="21" y="41" width="458" height="16"/>
+<!-- upper half: put away -->
+<rect class="up" x="21" y="57" width="458" height="138"/>
+<text class="gl" x="250" y="126">✕</text>
+<!-- lower half: transport thirds, split at 0.393 W and 0.607 W -->
+<rect class="t1" x="21" y="195" width="180.8" height="105"/>
+<rect class="t2" x="201.8" y="195" width="98.4" height="105"/>
+<rect class="t3" x="300.2" y="195" width="178.8" height="105"/>
+<line class="ln" x1="21" y1="195" x2="479" y2="195"/>
+<line class="ln" x1="201.8" y1="195" x2="201.8" y2="300"/>
+<line class="ln" x1="300.2" y1="195" x2="300.2" y2="300"/>
+<text class="gl" x="111" y="248">⏮</text>
+<text class="gl" x="251" y="248">⏯</text>
+<text class="gl" x="390" y="248">⏭</text>
+<!-- now-playing strip: cover bottom-left, style button bottom-right -->
+<rect class="bar" x="21" y="300" width="458" height="39"/>
+<rect class="cov" x="28" y="305" width="29" height="29" rx="4"/>
+<circle class="btn" cx="458" cy="319.5" r="13"/>
+<path d="M449,320 q4.5,-9 9,0 t9,0" stroke="#ffffff" stroke-width="2" fill="none"/>
+<!-- numbers -->
+<circle class="num" cx="40" cy="80" r="12"/><text class="numt" x="40" y="80">1</text>
+<circle class="num" cx="40" cy="215" r="12"/><text class="numt" x="40" y="215">2</text>
+<circle class="num" cx="220" cy="215" r="12"/><text class="numt" x="220" y="215">3</text>
+<circle class="num" cx="318" cy="215" r="12"/><text class="numt" x="318" y="215">4</text>
+<circle class="num" cx="75" cy="319.5" r="12"/><text class="numt" x="75" y="319.5">5</text>
+<circle class="num" cx="425" cy="319.5" r="12"/><text class="numt" x="425" y="319.5">6</text>
+
+<!-- ============ DRAG ============ -->
+<text class="ttl" x="750" y="22">☝ ⇄ ⇅</text>
+<rect class="scr" x="520" y="40" width="460" height="300" rx="10"/>
+<rect class="sb" x="521" y="41" width="458" height="16"/>
+<!-- usable area y 57..339 (h 282); edge depth 0.18: 82.8 px across, 50.8 px down -->
+<polygon class="e" points="521,57 979,57 896.2,107.8 603.8,107.8"/>
+<polygon class="e" points="521,339 979,339 896.2,288.2 603.8,288.2"/>
+<polygon class="e" points="521,57 603.8,107.8 603.8,288.2 521,339"/>
+<polygon class="e" points="979,57 896.2,107.8 896.2,288.2 979,339"/>
+<rect class="vol" x="603.8" y="107.8" width="292.4" height="180.4"/>
+<!-- arrows: either direction drives the value; up or right is more -->
+<line class="arr" x1="700" y1="82" x2="800" y2="82"/>
+<line class="arr" x1="700" y1="314" x2="800" y2="314"/>
+<line class="arr" x1="562" y1="150" x2="562" y2="246"/>
+<line class="arr" x1="938" y1="150" x2="938" y2="246"/>
+<line class="arr" x1="750" y1="150" x2="750" y2="246"/>
+<line class="arr" x1="690" y1="198" x2="810" y2="198"/>
+<circle class="num" cx="640" cy="82" r="12"/><text class="numt" x="640" y="82">7</text>
+<circle class="num" cx="640" cy="314" r="12"/><text class="numt" x="640" y="314">8</text>
+<circle class="num" cx="562" cy="128" r="12"/><text class="numt" x="562" y="128">9</text>
+<circle class="num" cx="938" cy="128" r="12"/><text class="numt" x="938" y="128">10</text>
+<circle class="num" cx="850" cy="150" r="12"/><text class="numt" x="850" y="150">11</text>
+</svg>

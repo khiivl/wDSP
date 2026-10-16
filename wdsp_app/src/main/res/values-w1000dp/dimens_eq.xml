@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wide fascias - the 1280x720 console this car has, and anything above 1000dp of width.
+
+         The equaliser row here has room to spare once the subwoofer frequency dropdown is down to
+         the width of "100 Hz" plus its arrow, so the five buttons of that row (amplifier volume
+         minus/plus and the quick actions minus/plus/zero) are 68dp rather than the 48dp base. They
+         are meant to be hit without looking, by a driver, in a moving car; the base value exists
+         for narrow windows, not as the target to aim for.
+
+         Measured on the unit 12.09.2026: at 36dp the row was uniform and unusable. -->
+    <dimen name="eq_action_button">68dp</dimen>
+
+    <!-- Same reasoning for the subwoofer slider: this panel has the room, so the thumb is bigger
+         still - 13dp of radius is 26dp of target, which is a thumb on a moving car's fascia. -->
+    <dimen name="eq_slider_thumb">13dp</dimen>
+
+    <!-- Room enough for "Підсилення:" and "Субвуфер:" in full, so neither is ever shortened here
+         and neither is padded out with empty space. -->
+    <dimen name="eq_caption_max">170dp</dimen>
+</resources>

@@ -4,7 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
+import android.media.AudioPlaybackConfiguration;
 import android.media.audiofx.AudioEffect;
 import android.util.Log;
 
@@ -12,15 +14,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Decides which audio session {@link SpectrumAnalyzerView} should attach its Visualizer to.
+ * Decides which audio session {@link AudioSpectrumEngine} should attach its Visualizer to.
  *
  * Why this exists: a Visualizer created on session 0 is an "output mix" effect, and
  * AudioPolicyManager::getOutputForEffect() hard-prefers the PRIMARY output. Stock QF policies
  * expose exactly two outputs - "primary output" and "fast" - and route all media to the fast one,
  * leaving primary in standby. The session-0 effect therefore processes an idle thread and yields
- * silence. Custom audio policies (users running a Magisk module, e.g. BitPerfect) move media back
- * onto primary, and there session 0 works - so session 0 stays a legitimate answer, it just
- * cannot be assumed.
+ * silence. Custom audio policies (users running a Magisk module) move media back onto primary, and
+ * there session 0 works - so session 0 stays a legitimate answer, it just cannot be assumed.
  *
  * A session-targeted effect is created on whichever thread the track actually lives on, which is
  * the way out. Measured on a K706: attaching to another app's session is permitted for a plain
@@ -53,6 +54,20 @@ public final class SessionResolver {
      * is rejected by the effect engine in about a millisecond.
      */
     private static final int MAX_CANDIDATES = 512;
+    /**
+     * Session 0 is listened to for longer: the output mix answers only after the output's latency
+     * (bench 09.10.2026: 591 ms on YouTube's track), so 120 ms of it read "silent" while music played,
+     * and the resolver walked 512 refusing sessions for 9 s before settling on 0 anyway.
+     */
+    private static final int OUTPUT_MIX_PROBE_MS = 800;
+    /**
+     * A sweep that met this many refusals in a row stops: here every other application's session is
+     * refused (error -3, YouTube's 473 included) and walking the rest only costs seconds. Ids are
+     * spaced eight apart, so this still covers the latest sixteen sessions.
+     */
+    private static final int MAX_REFUSED_IN_A_ROW = 128;
+    /** How many of the first session ids a boot-time native player may hold (ids up to 513). */
+    private static final int BOOT_SESSIONS = 64;
     /** A player announcing its session is only trusted for this long. */
     private static final long HINT_TTL_MS = 5 * 60 * 1000L;
 
@@ -85,7 +100,7 @@ public final class SessionResolver {
     /**
      * Starts listening for players that announce their session. Well-behaved players (Poweramp,
      * VLC, anything built on MediaPlayer) send this; YouTube Music does not, which is exactly why
-     * the sweep below still has to exist. Safe to call repeatedly - no-ops after the first.
+     * the sweep below still has to exist.
      */
     public synchronized void start() {
         if (effectSessionReceiver != null) return;
@@ -178,6 +193,14 @@ public final class SessionResolver {
             forget(cached);
         }
 
+        // Nothing is playing, so no session can carry a signal: walking 512 of them only creates and
+        // fails 512 Visualizers in audioserver. At boot that is exactly what happened - the engine
+        // resolves on start, before any player - and it fed a five-minute boot with a cascade of
+        // ANRs (bench, 02.10.2026: 644 failed effect creations; Antigravity, board #1243).
+        if (!isAudioPlaying()) {
+            Log.i(TAG, "Nothing is playing - no sweep");
+            return -1;
+        }
         int swept = sweep();
         if (swept >= 0) {
             Log.i(TAG, "Resolved by sweep: session " + swept + " in "
@@ -196,7 +219,15 @@ public final class SessionResolver {
      * the session that just started playing is the highest-numbered one.
      */
     private int sweep() {
-        if (SessionProbe.probe(0, PROBE_MS).hasSignal()) return 0;
+        // A cabin measurement is the only thing playing then - our own sweep track, nothing to find.
+        // 📻 13.10.2026 21:18, the first measurement after a reboot: its track woke this sweep, a probe
+        // Visualizer on it hit a destroyed native mutex in setCaptureSize (FORTIFY SIGABRT) and the
+        // process died with the measurement half-started.
+        if (RoomMeasurement.isRunning()) {
+            Log.i(TAG, "A cabin measurement is playing - no sweep");
+            return -1;
+        }
+        if (SessionProbe.probe(0, OUTPUT_MIX_PROBE_MS).hasSignal()) return 0;
 
         int counter = 0;
         try {
@@ -208,10 +239,95 @@ public final class SessionResolver {
         if (counter <= 0) return -1;
 
         int probed = 0;
+        int refusedInARow = 0;
         for (int sid = counter - 1; sid > 0 && probed < MAX_CANDIDATES; sid--, probed++) {
+            SessionProbe.Result r = SessionProbe.probe(sid, PROBE_MS);
+            if (r.hasSignal()) return sid;
+            refusedInARow = r.attached ? 0 : refusedInARow + 1;
+            if (refusedInARow >= MAX_REFUSED_IN_A_ROW) {
+                Log.i(TAG, "Sweep stopped after " + refusedInARow + " refusals in a row at session " + sid
+                        + " - this platform does not hand out other applications' sessions");
+                break;
+            }
+        }
+        return sweepBootSessions();
+    }
+
+    /**
+     * The lowest sessions, oldest first. A native daemon that opens its track at boot holds one of
+     * the first ids and is never in the playback list: 📻 15.10.2026, Bluetooth without BitPerfect -
+     * gocsdk_zj (root) played on session 41, attachable, signal; the walk from the top gave up
+     * hundreds of ids above it. Only session ids are probed: AudioFlinger hands them out as
+     * {@code (n << 3) | 1} (17, 41, YouTube's 473).
+     */
+    private int sweepBootSessions() {
+        for (int n = 1; n <= BOOT_SESSIONS; n++) {
+            int sid = (n << 3) | 1;
             if (SessionProbe.probe(sid, PROBE_MS).hasSignal()) return sid;
         }
         return -1;
+    }
+
+    private boolean isAudioPlaying() {
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            return am == null || mediaTrackStarted(am);
+        } catch (Throwable t) {
+            return true; // cannot tell - keep the old behaviour rather than go blind
+        }
+    }
+
+    /**
+     * Whether a media track is started in AudioFlinger - the only thing a Visualizer can be put on.
+     * One answer for the engine and for this resolver: until 09.10.2026 the resolver asked
+     * {@code isMusicActive()}, which on the bench said "nothing" while YouTube played (an active
+     * AudioTrack, usage MEDIA, state started), so the engine kept asking for a session and the
+     * resolver kept declining to look for one. The music stream's own activity is asked as well:
+     * a native track (gocsdk_zj's Bluetooth, 📻 15.10.2026) is started in AudioFlinger and absent
+     * from the playback list.
+     *
+     * <p>A call is never media. gocsdk_zj plays a Bluetooth call through the same kind of native
+     * track (16 kHz stereo, music stream), so without this the watchdog and the start-up both swept
+     * the sessions for 12 s in every call (📻 15.10.2026 21:44-21:46, two calls, the call track on
+     * session 193). The package cannot tell music from a call - it is the same one (owner) - and
+     * {@link CallState} can.
+     */
+    static boolean mediaTrackStarted(AudioManager am) {
+        if (am == null || CallState.isActive()) return false;
+        try {
+            if (am.isMusicActive()) return true;
+        } catch (Throwable ignored) {
+        }
+        try {
+            java.util.List<AudioPlaybackConfiguration> configs = am.getActivePlaybackConfigurations();
+            if (configs == null) return false;
+            for (AudioPlaybackConfiguration config : configs) {
+                if (!isConfigActive(config)) continue;
+                AudioAttributes attr = config.getAudioAttributes();
+                if (attr != null && (attr.getUsage() == AudioAttributes.USAGE_MEDIA
+                        || attr.getUsage() == AudioAttributes.USAGE_GAME
+                        || attr.getUsage() == AudioAttributes.USAGE_UNKNOWN)) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    static boolean isConfigActive(AudioPlaybackConfiguration config) {
+        if (config == null) return false;
+        try {
+            java.lang.reflect.Method m = config.getClass().getMethod("isActive");
+            Object res = m.invoke(config);
+            if (res instanceof Boolean) return (Boolean) res;
+        } catch (Throwable ignored) {}
+        try {
+            java.lang.reflect.Method m = config.getClass().getMethod("getPlayerState");
+            Object res = m.invoke(config);
+            if (res instanceof Integer) return ((Integer) res) == 2; // 2 = PLAYER_STATE_STARTED
+        } catch (Throwable ignored) {}
+        return true;
     }
 
     private synchronized void remember(String playerPackage, int sessionId) {

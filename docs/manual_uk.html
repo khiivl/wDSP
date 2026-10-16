@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="uk">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Посібник wDSP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a printed car-audio manual — a sticky contents rail on the left, one reading column, the head unit's own units (dB, Hz, volume step 1–32) set in mono. */
+:root {
+  --bg: #f6f7f8;
+  --paper: #ffffff;
+  --ink: #1b2226;
+  --muted: #5a666d;
+  --rule: #dde2e5;
+  --accent: #0b6e86;
+  --accent-soft: #e2f1f5;
+  --warn: #9a5a00;
+  --warn-soft: #fbf0df;
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171a; --paper: #182025; --ink: #e4eaed; --muted: #9aa8af; --rule: #2a353b;
+    --accent: #5fc3dc; --accent-soft: #15323b; --warn: #f0b45c; --warn-soft: #33270f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171a; --paper: #182025; --ink: #e4eaed; --muted: #9aa8af; --rule: #2a353b;
+  --accent: #5fc3dc; --accent-soft: #15323b; --warn: #f0b45c; --warn-soft: #33270f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 1rem; line-height: 1.6; }
+.wrap { max-width: 72rem; margin: 0 auto; padding-inline: 16px; padding-block: 2rem 4rem; display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 3rem; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; } nav.toc { position: static; } }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 1.5rem); align-self: start; font-size: .9rem; }
+nav.toc .label { font-family: var(--font-display); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+nav.toc ol { list-style: none; padding: 0; margin: .75rem 0 0; display: grid; gap: .35rem; }
+nav.toc a { color: var(--ink); text-decoration: none; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent); text-decoration: underline; }
+main { min-width: 0; }
+header.top { padding-block: 1rem 2rem; border-bottom: 1px solid var(--rule); }
+header.top .eyebrow { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: .5rem 0 1rem; text-wrap: balance; }
+header.top p { max-width: 62ch; color: var(--muted); font-size: 1.05rem; margin: 0; }
+section { padding-block: 2.25rem .5rem; border-bottom: 1px solid var(--rule); }
+section:last-of-type { border-bottom: 0; }
+h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; line-height: 1.25; margin: 0 0 1rem; text-wrap: balance; }
+h3 { font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 .4rem; }
+p, li { max-width: 66ch; }
+p { margin: 0 0 .9rem; }
+ul, ol { padding-left: 1.25rem; margin: 0 0 1rem; display: grid; gap: .35rem; }
+a { color: var(--accent); }
+.ui { font-weight: 600; white-space: nowrap; }
+.val { font-family: var(--font-mono); font-size: .88em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.steps { list-style: none; padding: 0; counter-reset: step; display: grid; gap: 1.25rem; }
+.steps > li { counter-increment: step; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: .75rem; max-width: none; }
+.steps > li::before { content: counter(step); font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; color: var(--accent); background: var(--accent-soft); border-radius: 50%; width: 2.25rem; height: 2.25rem; display: grid; place-items: center; }
+.steps h3 { margin-top: .25rem; }
+.note { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: .75rem 1rem; margin: 1rem 0; max-width: 66ch; }
+.note p:last-child { margin: 0; }
+.note .k { color: var(--warn); font-weight: 600; }
+.tablebox { overflow-x: auto; margin: 1rem 0 1.25rem; border: 1px solid var(--rule); background: var(--paper); }
+table { border-collapse: collapse; width: 100%; min-width: 40rem; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: .6rem .75rem; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--font-display); font-weight: 500; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+dl.tabs { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); gap: .6rem 1.25rem; margin: 0 0 1rem; }
+@media (max-width: 560px) { dl.tabs { grid-template-columns: minmax(0, 1fr); gap: .2rem; } dl.tabs dd { margin-bottom: .8rem; } }
+dl.tabs dt { font-weight: 600; }
+dl.tabs dd { margin: 0; max-width: 62ch; }
+.scale { font-family: var(--font-mono); font-size: .85rem; background: var(--paper); border: 1px solid var(--rule); padding: .75rem 1rem; overflow-x: auto; white-space: pre; margin: .5rem 0 1rem; }
+footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
+@media (max-width: 860px) { nav.toc { position: static; } }
+</style>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Зміст">
+    <div class="label">Зміст</div>
+    <ol>
+      <li><a href="#about">Що це за програма</a></li>
+      <li><a href="#first">Перший запуск</a></li>
+      <li><a href="#order">Порядок налаштування</a></li>
+      <li><a href="#calibrations">Що калібрується і навіщо</a></li>
+      <li><a href="#tabs">Вкладки головного екрана</a></li>
+      <li><a href="#spectrum">Спектр і RTA</a></li>
+      <li><a href="#presets">Пресети й автоматизація</a></li>
+      <li><a href="#looks">Віджет і заставка</a></li>
+      <li><a href="#trouble">Коли щось не так</a></li>
+      <li><a href="#send">Як надіслати вимір</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="top">
+      <div class="eyebrow">wDSP · mod kostyamat · магнітоли QF / K706</div>
+      <h1>Посібник wDSP</h1>
+      <p>Що є в програмі, у якому порядку її налаштовувати, що саме вона вимірює і навіщо. Для водія, а не для програміста.</p>
+    </header>
+
+    <section id="about">
+      <h2>Що це за програма</h2>
+      <p>У магнітолах QF звук після Android проходить через окремий звуковий процесор <span class="val">ROHM BU32107</span>. wDSP керує ним через MCU магнітоли: еквалайзером, фільтрами дверних динаміків, сабвуфером, затримками, фейдером. Заводська програма DSP робить те саме, тільки вміє менше.</p>
+      <p>Що дає процесор і чого не дає, варто знати заздалегідь:</p>
+      <ul>
+        <li>один еквалайзер на всі динаміки: <span class="val">16</span> смуг від <span class="val">20 Гц</span> до <span class="val">20 кГц</span>, крок <span class="val">2 дБ</span>, межа <span class="val">±12 дБ</span>, ширина смуги фіксована;</li>
+        <li>окремого еквалайзера на лівий чи правий динамік немає;</li>
+        <li>сабвуфер має свій фільтр, рівень і затримку, двері — свій фільтр низу й підсилення басу.</li>
+      </ul>
+      <p>Тому вимір салону шукає насамперед <b>вади</b>: переплутані дроти, динамік у протифазі, тихий бік, резонанс дверей. Еквалайзер він виправляє грубо, широкими смугами. Рівної до децибела кривої на такому залізі не буває, і програма її не обіцяє.</p>
+    </section>
+
+    <section id="first">
+      <h2>Перший запуск</h2>
+      <p>Під час першого запуску програма показує майстер дозволів. Увімкніть кожен дозвіл кнопкою поруч:</p>
+      <ul>
+        <li><span class="ui">Мікрофон (Запис звуку)</span> — вимір салону та живий спектр у режимі мікрофона;</li>
+        <li><span class="ui">Поверх інших додатків (Оверлей)</span> — віджет у статус-барі та заставка;</li>
+        <li><span class="ui">Доступ до сповіщень (метадані)</span> — щоб читати назву треку й обкладинку;</li>
+        <li><span class="ui">Геолокація / GPS (GALA)</span> — для GALA (підлаштування гучності до швидкості);</li>
+        <li><span class="ui">Фонова робота (Енергозбереження)</span> — щоб Android не вбивав службу, яка тримає процесор.</li>
+      </ul>
+      <p>Root (Magisk) необов'язковий. Якщо він є, програма перед виміром сама забирає мікрофон у голосових асистентів.</p>
+    </section>
+
+    <section id="order">
+      <h2>Порядок налаштування</h2>
+      <p>Порядок має значення: кожне наступне спирається на результати попереднього. Усе, де потрібен мікрофон, робіть у машині: двері й вікна зачинені, мотор вимкнений, у салоні тихо.</p>
+      <ol class="steps">
+        <li><div>
+          <h3>Опишіть машину</h3>
+          <p><span class="ui">Налаштування</span> → <span class="ui">Акустичне калібрування салону та авто-пресети</span>. Тут ви задаєте те, без чого вимір не зрозуміти:</p>
+          <ul>
+            <li><span class="ui">Салон</span>: <span class="ui">Закритий (авто)</span> чи <span class="ui">Відкритий (стенд, кабріолет)</span>. У закритому низи підсилює сам кузов (підйом салону), і розрахунок це враховує;</li>
+            <li>довжина, ширина й висота;</li>
+            <li><span class="ui">Де стоїть мікрофон</span> і <span class="ui">Що навколо капсуля</span>: це впливає на поправку верхів;</li>
+            <li>чи є сабвуфер і <span class="ui">Де стоїть сабвуфер</span>.</li>
+          </ul>
+        </div></li>
+        <li><div>
+          <h3>Відкалібруйте мікрофон</h3>
+          <p>Натисніть <span class="ui">Калібрувати мікрофон</span>. Мікрофон у магнітолі не вимірювальний: на найнижчих і найвищих частотах він чує не так, як людське вухо. Калібрування знімає його поправку, щоб кривизну капсуля не сплутати з кривизною машини.</p>
+          <p>Що відбувається за цю хвилину:</p>
+          <ul>
+            <li><b>вибір гучності</b> — короткий звук з усіх динаміків, щоб увійти в чутливість мікрофона;</li>
+            <li><b>свіпи</b> — плавний перехід від низу до верху по черзі через кожен динамік і саб;</li>
+            <li><b>кроки гучності</b> — близько <span class="val">20 с</span> тихого звуку, поки гучність сама спускається від <span class="val">32</span> до <span class="val">1</span>. Так програма дізнається, скільки децибелів на вашій магнітолі дає кожен крок.</li>
+          </ul>
+          <p>Це робиться один раз. Переробляти — лише якщо переставили мікрофон або змінили підсилювач.</p>
+        </div></li>
+        <li><div>
+          <h3>Зніміть салон і зберіть пресет</h3>
+          <p>Натисніть <span class="ui">Калібрувати салон та створити пресет</span>. Майстер запитає чотири речі:</p>
+          <ul>
+            <li><span class="ui">Конфігурація сабвуфера</span> — чи є саб;</li>
+            <li><span class="ui">Цільова крива звучання</span>: <span class="ui">Harman</span> (теплий автомобільний еталон), <span class="ui">Dolby Atmos</span>, <span class="ui">Club / Bass Heavy (клубний драйв)</span>, <span class="ui">Vocal / Podcast (голос та аудіокниги)</span> або <span class="ui">Studio Flat</span>;</li>
+            <li><span class="ui">Сцена</span> — водій, центр спереду, центр салону чи без затримок;</li>
+            <li><span class="ui">Відстань від мікрофона до вух</span>.</li>
+          </ul>
+          <p>Перед виміром поставте гучність, на якій зазвичай слухаєте: до неї прив'яжеться тонкомпенсація нового пресета. Сама програма поміряє на потрібній гучності. Далі йде:</p>
+          <ul>
+            <li><b>пошук гучності</b>, близько <span class="val">4 с</span>: тиша, потім подвійний тон <span class="val">80 Гц + 1 кГц</span>. Програма обирає крок від <span class="val">6</span> до <span class="val">18</span>, де низи чисто стоять над шумом салону і нічого не перевантажується. Якщо в машині шумно, вимір не зупиняється — шум записується у звіт;</li>
+            <li>запис шуму салону;</li>
+            <li>свіпи по динаміках окремо;</li>
+            <li>розрахунок затримок;</li>
+            <li>розрахунок пресета;</li>
+            <li><b>контрольний свіп</b> — усі динаміки разом через щойно розрахований пресет. Це показує, чи саб і двері грають разом, чи гасять одне одного на стику.</li>
+          </ul>
+        </div></li>
+        <li><div>
+          <h3>Подивіться звіт і застосуйте</h3>
+          <p>На екрані <span class="ui">Результати калібрування та Auto-EQ</span> видно все, що програма дізналася про вашу акустику:</p>
+          <ul>
+            <li><span class="ui">Що знайшов вимір</span> — список вад зі ступенем впевненості (<span class="ui">Напевно</span>, <span class="ui">Ймовірно</span>, <span class="ui">Можливо</span>) і порадами, що робити;</li>
+            <li>частоту кросовера — де двері віддають бас сабу;</li>
+            <li>затримки по каналах;</li>
+            <li>поправку еквалайзера.</li>
+          </ul>
+          <p>Кнопки внизу:</p>
+          <ul>
+            <li><span class="ui">Застосувати Auto-EQ</span> — зберігає і вмикає новий пресет;</li>
+            <li><span class="ui">Зберегти архів (.zip)</span> — зберігає файл, щоб надіслати нам;</li>
+            <li><span class="ui">Закрити</span> — вийти без змін.</li>
+          </ul>
+          <p>Порада змінити фазу саба (перемикачем <span class="val">0/180</span> або дротами) з'являється лише тоді, коли контрольний свіп це справді побачив.</p>
+        </div></li>
+        <li><div>
+          <h3>Підлаштуйте тонкомпенсацію</h3>
+          <p>Відкрийте вкладку <span class="ui">Тонкомп.</span> Людське вухо на малій гучності гірше чує низи. Тонкомпенсація додає низи, коли ви робите тихіше.</p>
+          <ul>
+            <li><span class="ui">Точка калібрування</span> — гучність, вище якої тонкомпенсація нічого не додає. Для знятих пресетів це звичайна гучність, на якій ви запускали вимір. Якщо вона була тихішою за сам вимір, програма ставить точку на <span class="val">18 дБ</span> вище за вашу звичайну, між кроками <span class="val">16</span> і <span class="val">24</span>;</li>
+            <li><span class="ui">Сила корекції</span> — наскільки піднімати низи.</li>
+          </ul>
+          <p>Програма рахує децибели, зняті на кроці 2, а не просто номери кроків. Внизу працює автоматична перевірка: якщо щось стоїть не так, кнопка <span class="ui">Виставити правильно</span> одразу це виправить.</p>
+        </div></li>
+        <li><div>
+          <h3>Зніміть нуль RTA</h3>
+          <p>Відкрийте <span class="ui">Аудіотест</span> → <span class="ui">Рожевий шум</span> → <span class="ui">Нуль RTA</span>. Це дає спектру нерухому полицю відліку замість плаваючого середнього.</p>
+          <p>Одне натискання знімає обидва нулі, Музику й Мікрофон, незалежно від того, який екран відкритий. Програма на кілька секунд ставить ту гучність, на якій калібрували мікрофон, і повертає назад. Нуль мікрофона прив'язується до цього кроку, і крива більше не повзе від крутіння гучності.</p>
+        </div></li>
+        <li><div>
+          <h3>Узгодьте віджет з музикою</h3>
+          <p><span class="ui">Налаштування</span> → <span class="ui">Синхронізація зі звуком</span> → <span class="ui">Синхронізувати</span>. Програма порахує затримку звукового тракту відносно екрана на вашому залізі. Стовпчики стрибатимуть рівно в біт.</p>
+        </div></li>
+      </ol>
+    </section>
+
+    <section id="calibrations">
+      <h2>Що калібрується і навіщо</h2>
+      <p>У програмі п'ять різних калібрувань. Вони роблять абсолютно різні речі:</p>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>Що</th><th>Де</th><th>Що дізнається програма</th><th>На що впливає</th><th>Коли переробляти</th></tr></thead>
+          <tbody>
+            <tr><td>Мікрофон</td><td>Налаштування → Калібрувати мікрофон</td><td>Як вбудований мікрофон чує низи й верхи відносно вуха</td><td>Вимір салону, спектр «Мікрофон»</td><td>Новий мікрофон або інше його кріплення</td></tr>
+            <tr><td>Кроки гучності</td><td>Саме, під час калібрування мікрофона</td><td>Скільки децибелів скидає кожен крок <span class="val">1…32</span> на вашій магнітолі й підсилювачі</td><td>Тонкомпенсація, масштаб RTA мікрофона</td><td>Кожного разу з мікрофоном</td></tr>
+            <tr><td>Салон</td><td>Налаштування → Cabin Acoustic Calibration</td><td>Вади, затримки, кросовер і пресет під вашу машину</td><td>Новий пресет</td><td>Змінили динаміки, саб або зашумили двері</td></tr>
+            <tr><td>Нуль RTA</td><td>Аудіотест → Рожевий шум → Нуль RTA</td><td>Нерухому полицю відліку для кривої</td><td>Лише картинка спектра</td><td>Після калібрування мікрофона; на звук не впливає</td></tr>
+            <tr><td>Синхронізація звуку</td><td>Налаштування → Синхронізація звуку</td><td>Затримку звуку відносно картинки</td><td>Лише картинка віджета й заставки</td><td>Після оновлення прошивки чи звукового модуля</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Точка тонкомпенсації — це не вимір, а налаштування: її ставить майстер або ви руками.</p>
+    </section>
+
+    <section id="tabs">
+      <h2>Вкладки головного екрана</h2>
+      <dl class="tabs">
+        <dt>Еквалайзер</dt>
+        <dd>16 смуг, вибір пресета вгорі і блок <span class="ui">Сабвуфер</span>: зріз частоти й рівень. Кожен повзунок показує, на скільки децибелів змінюється середина смуги. Сусідні смуги перекриваються з правильним складанням: три повзунки на <span class="val">+4</span> дають полицю <span class="val">+4</span>, а не горб. Графік малює реальну криву чипа.</dd>
+        <dt>Тонкомпенсація</dt>
+        <dd>Власне тонкомпенсація (<span class="ui">Loudness</span>), точка відліку і сила підйому низу. <span class="ui">Компенсація саба</span> додає підйом і для саба. <span class="ui">Послабити ВЧ</span> пом'якшує дзвін на високій гучності. <span class="ui">Ультра-бас</span> додає екстра-низ нижче обраної гучності. Графік показує реальну криву.</dd>
+        <dt>Затримки</dt>
+        <dd>Вирівнювання динаміків за часом у мілісекундах і сантиметрах, щоб звук прилітав одночасно. Розраховується під час виміру салону. Кнопки <span class="ui">Передні рухати разом</span> / <span class="ui">Задні рухати разом</span> рухають динаміки парами, зберігаючи різницю. Тут же — об'ємний звук і Rear-Fill.</dd>
+        <dt>Інше</dt>
+        <dd>Фільтри дверних динаміків: <span class="ui">Фільтр</span> зрізає низи, які двері грати не можуть, і віддає їх сабу; <span class="ui">Підсилення</span> піднімає обрану частоту. Окремо перед і зад; перемикач <span class="ui">Як спереду</span> повторює передні налаштування. Тут же фейдер і баланс.</dd>
+        <dt>GALA</dt>
+        <dd>Підйом гучності зі швидкістю за GPS, щоб компенсувати шум дороги. Крок швидкості, поріг увімкнення й межа підйому. На дзвінках автоматично вимикається.</dd>
+        <dt>Аудіотест</dt>
+        <dd>Сигнали для перевірки на слух: стем-треки (бас, голос, ударні, мелодія) у будь-яких комбінаціях, рожевий шум, генератор синуса, свіп, перевірка динаміків по черзі і режим <span class="ui">Тільки сабвуфер</span>. Усе йде через увімкнений пресет. Тимчасовий фейдер і саб соло не псують пресет.</dd>
+      </dl>
+    </section>
+
+    <section id="spectrum">
+      <h2>Спектр і RTA</h2>
+      <p>Перемикач <span class="ui">Спектр</span> над еквалайзером має три положення. У налаштуваннях обирається вигляд: стовпчики чи жива крива.</p>
+      <dl class="tabs">
+        <dt>Вимкнено</dt>
+        <dd>Спектра на головному екрані немає. Віджет у статус-барі й заставка продовжують працювати.</dd>
+        <dt>Музика</dt>
+        <dd>Музика, яку ви граєте, з урахуванням того, що робить пресет: <b>як має звучати</b>. Від гучності не залежить.</dd>
+        <dt>Мікрофон</dt>
+        <dd><b>Як насправді звучить салон</b>, очима мікрофона магнітоли, у тій самій шкалі, що й Музика. Де дві криві розійшлися — там машина додає чи забирає своє.</dd>
+      </dl>
+      <p>Радіо через Android не проходить, тому в Музиці у радіо спектра немає; Мікрофон працює і з радіо.</p>
+    </section>
+
+    <section id="presets">
+      <h2>Пресети й автоматизація</h2>
+      <ul>
+        <li>Керування пресетами на головному екрані: створення, перейменування, видалення, експорт та імпорт.</li>
+        <li><span class="ui">Автоматизація пресетів</span> прив'язує пресети до програм: радіо грає зі своїм пресетом, Bluetooth — зі своїм. Пресет для дзвінків задається в рядку <span class="ui">Телефонний дзвінок</span>. <span class="ui">Глобальний стандарт</span> діє для решти.</li>
+        <li>Гучність запам'ятовується для кожного джерела окремо, як це робить магнітола.</li>
+        <li><span class="ui">Резервна копія налаштувань</span> і <span class="ui">Відновити налаштування</span>: повний архів або самі налаштування без пресетів.</li>
+        <li><span class="ui">Відновлювати плеєр після перезавантаження</span> і <span class="ui">Відновлювати плеєр після сну</span>: плеєр, що грав, повертається сам, без того щоб його вікно вискакувало поверх навігатора. Радіо відновлюється саме. Для сну натисніть <span class="ui">Дозволити wDSP жити під час сну</span> і увімкніть wDSP у списку, що відкриється.</li>
+      </ul>
+    </section>
+
+    <section id="looks">
+      <h2>Віджет і заставка</h2>
+      <p><span class="ui">Візуалізатор статус-бара</span> — міні-спектр прямо в смужці Android: ширина, зсув, висота, стилі (класичні стовпчики, Outrun, стрілочний індикатор, осцилограф) та кольори.</p>
+      <p><span class="ui">Заставка</span> — повноекранна візуалізація під час простою: час очікування, яскравість день/ніч, чорний список програм. Навігатор, вибраний у налаштуваннях магнітоли, ніколи не закривається. <span class="ui">Накривати статус-бар</span> вирішує, чи ховати смужку статус-бару. Її керування — на карті нижче.</p>
+      <figure style="margin:1.5rem 0 1rem;">
+        <img src="screensaver_map.svg" alt="Карта зон заставки: дотики ліворуч, жести праворуч" style="width:100%;max-width:900px;display:block;">
+        <figcaption style="font-size:0.85rem;color:var(--muted);margin-top:0.5rem;">Карта зон заставки: дотики (ліворуч) і жести (праворуч).</figcaption>
+      </figure>
+      <h3>Зони заставки</h3>
+      <p><b>Дотик (ліва схема):</b></p>
+      <ul>
+        <li><b>1</b> — верхня половина: сховати заставку;</li>
+        <li><b>2</b> — нижня половина, ліва третина (до самого краю): попередній трек;</li>
+        <li><b>3</b> — середина: пауза / відтворення;</li>
+        <li><b>4</b> — права третина (до краю): наступний трек;</li>
+        <li><b>5</b> — обкладинка / значок плеєра (низ ліворуч): відкрити той плеєр чи радіо, що грає;</li>
+        <li><b>6</b> — кнопка стилю (низ праворуч): дотик — наступний стиль візуалізації; утримання 1 с — еквалайзер wDSP.</li>
+      </ul>
+      <p><b>Перетяг (права схема)</b> — вирішує, біля якого краю палець почав. Тягти можна в будь-який бік; вгору чи вправо — більше. Значення зберігається, коли відпустили:</p>
+      <ul>
+        <li><b>7</b> — від верхнього краю: затемнення тла;</li>
+        <li><b>8</b> — від нижнього краю: ширина візуалізації;</li>
+        <li><b>9</b> — від лівого краю: висота;</li>
+        <li><b>10</b> — від правого краю: яскравість (окремо день і ніч);</li>
+        <li><b>11</b> — з середини: гучність; увесь екран — уся шкала 0–32.</li>
+      </ul>
+      <p><span class="ui">Стиль інтерфейсу</span>: <span class="ui">Класичний (Оригінал)</span> — авторське розміщення; <span class="ui">Модерн</span> — оновлений адаптивний дизайн. Обидва підтримують денну й нічну теми.</p>
+    </section>
+
+    <section id="trouble">
+      <h2>Коли щось не так</h2>
+      <h3>«Мікрофон тимчасово зайнятий, показуємо розрахунковий спектр»</h3>
+      <p>Хтось інший тримає мікрофон, частіше за все Google Assistant. Перезавантажте магнітолу: wDSP стартує рано і забере мікрофон першим. З root wDSP забирає його сам.</p>
+      <h3>Вимір пише «виміряно в шумі»</h3>
+      <p>У машині було занадто шумно. Гучність свіпів програма обирає сама, тож треба зменшити шум: зачинити вікна й двері, заглушити мотор, вимкнути клімат і повторити.</p>
+      <h3>Не знялися кроки гучності</h3>
+      <p>Шум перебив сигнал або мікрофон не почув перевірку. Програма тримає раніше зняті кроки, а без них використовує номінальні кроки. Повторіть калібрування мікрофона в тихій машині.</p>
+      <h3>Нуль мікрофона повзе від гучності</h3>
+      <p>Нуль мікрофона зняли ще до того, як програма почала стежити за гучністю. Зніміть нуль заново на рожевому шумі (крок 6).</p>
+      <h3>Червоний напис «Мікрофон перевантажений» над еквалайзером</h3>
+      <p>Сигнал із мікрофона настільки гучний, що впирається в стелю, найчастіше на басі. Поки це так, крива мікрофона малюється з АРП: її рівень підтягнутий під Музику, а форма приблизна. Щойно рівень впаде, напис зникне, а крива повернеться до свого нуля. Якщо напис з'являється на звичайній гучності — зменште чутливість мікрофона в налаштуваннях магнітоли.</p>
+      <h3>Звук змінився після перезавантаження</h3>
+      <p>Налаштування процесора після старту повертає фонова служба без відкриття вікна. Перевірте, чи дозволена <span class="ui">Робота у фоні</span> та <span class="ui">життя під час сну</span>.</p>
+    </section>
+
+    <section id="send">
+      <h2>Як надіслати вимір</h2>
+      <p>Після зняття салону натисніть <span class="ui">Зберегти архів (.zip)</span>. У ньому будуть логи виміру, поправка мікрофона, таблиця кроків гучності та синхронний системний звіт.</p>
+      <p>Архів, системний звіт (<span class="ui">Діагностика</span> → <span class="ui">Системний звіт</span>) і кілька слів про те, як змінився звук, надсилайте в групу мода: <a href="https://t.me/kostyamat_dev/92" target="_blank" rel="noopener">t.me/kostyamat_dev/92</a>. У версії автора немає виміру салону, тому виміри — у групу мода. Оригінальний проєкт: <a href="https://t.me/wDSPapp" target="_blank" rel="noopener">t.me/wDSPapp</a>.</p>
+      <p>У повідомленні вкажіть марку, модель машини, де стоїть мікрофон і який підсилювач.</p>
+    </section>
+
+    <footer>
+      Посібник для wDSP 1.1 "Bulldozer" mod, 15.10.2026. wDSP — автор: Володимир Чебаненко (khiivl); mod — Kostiantyn Matviyevskyy.
+    </footer>
+  </main>
+</div>

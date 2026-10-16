@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="it">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manuale di wDSP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a printed car-audio manual — a sticky contents rail on the left, one reading column, the head unit's own units (dB, Hz, volume step 1–32) set in mono. */
+:root {
+  --bg: #f6f7f8;
+  --paper: #ffffff;
+  --ink: #1b2226;
+  --muted: #5a666d;
+  --rule: #dde2e5;
+  --accent: #0b6e86;
+  --accent-soft: #e2f1f5;
+  --warn: #9a5a00;
+  --warn-soft: #fbf0df;
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171a; --paper: #182025; --ink: #e4eaed; --muted: #9aa8af; --rule: #2a353b;
+    --accent: #5fc3dc; --accent-soft: #15323b; --warn: #f0b45c; --warn-soft: #33270f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171a; --paper: #182025; --ink: #e4eaed; --muted: #9aa8af; --rule: #2a353b;
+  --accent: #5fc3dc; --accent-soft: #15323b; --warn: #f0b45c; --warn-soft: #33270f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 1rem; line-height: 1.6; }
+.wrap { max-width: 72rem; margin: 0 auto; padding-inline: 16px; padding-block: 2rem 4rem; display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 3rem; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; } nav.toc { position: static; } }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 1.5rem); align-self: start; font-size: .9rem; }
+nav.toc .label { font-family: var(--font-display); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+nav.toc ol { list-style: none; padding: 0; margin: .75rem 0 0; display: grid; gap: .35rem; }
+nav.toc a { color: var(--ink); text-decoration: none; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent); text-decoration: underline; }
+main { min-width: 0; }
+header.top { padding-block: 1rem 2rem; border-bottom: 1px solid var(--rule); }
+header.top .eyebrow { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: .5rem 0 1rem; text-wrap: balance; }
+header.top p { max-width: 62ch; color: var(--muted); font-size: 1.05rem; margin: 0; }
+section { padding-block: 2.25rem .5rem; border-bottom: 1px solid var(--rule); }
+section:last-of-type { border-bottom: 0; }
+h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; line-height: 1.25; margin: 0 0 1rem; text-wrap: balance; }
+h3 { font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 .4rem; }
+p, li { max-width: 66ch; }
+p { margin: 0 0 .9rem; }
+ul, ol { padding-left: 1.25rem; margin: 0 0 1rem; display: grid; gap: .35rem; }
+a { color: var(--accent); }
+.ui { font-weight: 600; white-space: nowrap; }
+.val { font-family: var(--font-mono); font-size: .88em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.steps { list-style: none; padding: 0; counter-reset: step; display: grid; gap: 1.25rem; }
+.steps > li { counter-increment: step; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: .75rem; max-width: none; }
+.steps > li::before { content: counter(step); font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; color: var(--accent); background: var(--accent-soft); border-radius: 50%; width: 2.25rem; height: 2.25rem; display: grid; place-items: center; }
+.steps h3 { margin-top: .25rem; }
+.note { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: .75rem 1rem; margin: 1rem 0; max-width: 66ch; }
+.note p:last-child { margin: 0; }
+.note .k { color: var(--warn); font-weight: 600; }
+.tablebox { overflow-x: auto; margin: 1rem 0 1.25rem; border: 1px solid var(--rule); background: var(--paper); }
+table { border-collapse: collapse; width: 100%; min-width: 40rem; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: .6rem .75rem; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--font-display); font-weight: 500; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+dl.tabs { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); gap: .6rem 1.25rem; margin: 0 0 1rem; }
+@media (max-width: 560px) { dl.tabs { grid-template-columns: minmax(0, 1fr); gap: .2rem; } dl.tabs dd { margin-bottom: .8rem; } }
+dl.tabs dt { font-weight: 600; }
+dl.tabs dd { margin: 0; max-width: 62ch; }
+.scale { font-family: var(--font-mono); font-size: .85rem; background: var(--paper); border: 1px solid var(--rule); padding: .75rem 1rem; overflow-x: auto; white-space: pre; margin: .5rem 0 1rem; }
+footer { color: var(--muted); font-size: .85rem; padding-top: 2rem; }
+@media (max-width: 860px) { nav.toc { position: static; } }
+</style>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Indice dei contenuti">
+    <div class="label">Contenuti</div>
+    <ol>
+      <li><a href="#about">Informazioni sull'app</a></li>
+      <li><a href="#first">Primo avvio</a></li>
+      <li><a href="#order">Sequenza di configurazione</a></li>
+      <li><a href="#calibrations">Cosa viene calibrato e perché</a></li>
+      <li><a href="#tabs">Schede della schermata principale</a></li>
+      <li><a href="#spectrum">Spettro e RTA</a></li>
+      <li><a href="#presets">Predefiniti e automazione</a></li>
+      <li><a href="#looks">Widget e salvaschermo</a></li>
+      <li><a href="#trouble">Risoluzione dei problemi</a></li>
+      <li><a href="#send">Condivisione delle misurazioni</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="top">
+      <div class="eyebrow">wDSP · mod kostyamat · autoradio QF / K706</div>
+      <h1>Manuale di wDSP</h1>
+      <p>Tutto ciò che c'è nell'app, il giusto ordine di regolazione, cosa misura e perché. Scritto per il guidatore, non per il programmatore.</p>
+    </header>
+
+    <section id="about">
+      <h2>Informazioni sull'app</h2>
+      <p>Nelle autoradio QF, il segnale audio di Android passa attraverso un processore di suono dedicato <span class="val">ROHM BU32107</span>. wDSP lo controlla tramite l'MCU dell'autoradio: l'equalizzatore, i filtri degli altoparlanti nelle portiere, il subwoofer, i ritardi e il fader. L'app DSP di fabbrica gestisce lo stesso circuito, ma offre un controllo nettamente inferiore.</p>
+      <p>È utile comprendere sin da subito cosa il processore può e non può fare:</p>
+      <ul>
+        <li>un unico equalizzatore condiviso da tutti gli altoparlanti: <span class="val">16</span> bande da <span class="val">20 Hz</span> a <span class="val">20 kHz</span>, passi di <span class="val">2 dB</span>, limiti di <span class="val">±12 dB</span>, fattore Q fisso;</li>
+        <li>nessun equalizzatore indipendente per il lato sinistro o destro;</li>
+        <li>il subwoofer ha un proprio filtro passa-basso, guadagno e ritardo dedicati; le portiere hanno un filtro passa-alto e un'enfatizzazione dei bassi.</li>
+      </ul>
+      <p>Per questo motivo, la misurazione dell'abitacolo mira soprattutto a individuare i <b>difetti</b>: cavi invertiti, altoparlanti in controfase, canali sbilanciati e risonanze delle portiere. L'equalizzatore applica correzioni ampie ed equilibrate. Su questo hardware non esiste una curva perfettamente lineare al decibel, e l'app non la promette.</p>
+    </section>
+
+    <section id="first">
+      <h2>Primo avvio</h2>
+      <p>Al primo avvio, l'applicazione mostra la procedura guidata per i permessi. Abilita ciascun permesso con il relativo pulsante:</p>
+      <ul>
+        <li><span class="ui">Microphone (Audio Recording)</span> — misurazione dell'abitacolo e spettro in tempo reale in modalità microfono;</li>
+        <li><span class="ui">Display Over Other Apps</span> — widget nella barra di stato e salvaschermo a tutto schermo;</li>
+        <li><span class="ui">Notification Access (Metadata)</span> — lettura dei titoli dei brani e delle copertine;</li>
+        <li><span class="ui">GPS Location (GALA Speed)</span> — per GALA (regolazione del volume in base alla velocità);</li>
+        <li><span class="ui">Background Power Optimization</span> — impedisce ad Android di chiudere il servizio che gestisce il processore.</li>
+      </ul>
+      <p>I permessi di root (Magisk) sono facoltativi. Se disponibili, permettono all'app di acquisire in autonomia il controllo del microfono dagli assistenti vocali prima delle misurazioni.</p>
+    </section>
+
+    <section id="order">
+      <h2>Sequenza di configurazione</h2>
+      <p>L'ordine è fondamentale: ogni passaggio si basa sui risultati del precedente. Esegui tutto ciò che richiede il microfono all'interno dell'auto: portiere e finestrini chiusi, motore spento e silenzio assoluto.</p>
+      <ol class="steps">
+        <li><div>
+          <h3>Descrivi il veicolo</h3>
+          <p><span class="ui">Impostazioni wDSP</span> → <span class="ui">Cabin Acoustic Calibration & Auto-Presets</span>. Qui definisci i parametri per interpretare gli sweep:</p>
+          <ul>
+            <li><span class="ui">Abitacolo</span>: <span class="ui">Chiuso (auto)</span> o <span class="ui">Aperto (banco, cabriolet)</span>. In un abitacolo chiuso la carrozzeria amplifica naturalmente i bassi profondi (gain dell'abitacolo), e il modello ne tiene conto;</li>
+            <li>lunghezza, larghezza e altezza;</li>
+            <li><span class="ui">Dov'è il microfono</span> e <span class="ui">Cosa circonda la capsula</span>: influisce sulla correzione degli acuti;</li>
+            <li>presenza del subwoofer e <span class="ui">Posizione del subwoofer</span>.</li>
+          </ul>
+        </div></li>
+        <li><div>
+          <h3>Calibra il microfono</h3>
+          <p>Tocca <span class="ui">Calibrate Microphone</span>. Il microfono dell'autoradio non è uno strumento da laboratorio: la sua risposta agli estremi bassi e acuti differisce da quella dell'orecchio umano. La calibrazione ne rileva il profilo per non attribuire le imperfezioni della capsula all'acustica dell'auto.</p>
+          <p>Cosa avviene in questo minuto:</p>
+          <ul>
+            <li><b>controllo del livello</b> — un breve impulso su tutti gli altoparlanti per allinearsi alla sensibilità del microfono;</li>
+            <li><b>sweep</b> — variazioni sinusoidali fluide dai bassi agli acuti attraverso ogni altoparlante e subwoofer a turno;</li>
+            <li><b>passi di volume</b> — circa <span class="val">20 s</span> di tono a basso volume mentre il livello scende automaticamente da <span class="val">32</span> a <span class="val">1</span>. In questo modo l'app rileva l'esatta caduta in decibel di ciascun passo di volume dell'autoradio.</li>
+          </ul>
+          <p>Questa operazione si compie una volta sola. Si ripete solo se si sposta il microfono o si sostituisce l'amplificatore.</p>
+        </div></li>
+        <li><div>
+          <h3>Misura l'abitacolo e crea un predefinito</h3>
+          <p>Tocca <span class="ui">Misura</span>. La procedura chiederà quattro elementi:</p>
+          <ul>
+            <li><span class="ui">Subwoofer Configuration</span> — se il subwoofer è presente;</li>
+            <li><span class="ui">Target Sound Profile</span>: <span class="ui">Harman</span> (riferimento caldo per auto), <span class="ui">Dolby Atmos</span>, <span class="ui">Club / Bass Heavy</span>, <span class="ui">Vocal / Podcast</span> o <span class="ui">Studio Flat</span>;</li>
+            <li><span class="ui">Focalizzazione della scena</span> — Sedile guida, Centro anteriore, Centro abitacolo o Senza ritardi;</li>
+            <li><span class="ui">Distanza dal microfono alle orecchie</span>.</li>
+          </ul>
+          <p>Prima della misurazione, imposta il volume al tuo livello abituale di ascolto: ad esso si aggancerà il Loudness del nuovo predefinito. La misurazione sceglierà il proprio livello automaticamente. Il processo prevede:</p>
+          <ul>
+            <li><b>ricerca del volume</b>, circa <span class="val">4 s</span>: silenzio, poi un doppio tono <span class="val">80 Hz + 1 kHz</span>. L'app sceglie un passo tra <span class="val">6</span> e <span class="val">18</span> in cui i bassi emergono chiaramente sopra il rumore dell'abitacolo senza distorsione. Il rumore ambientale non interrompe il test: viene annotato nel rapporto;</li>
+            <li>registrazione del rumore di fondo;</li>
+            <li>sweep per ogni singolo altoparlante;</li>
+            <li>calcolo dei ritardi temporali;</li>
+            <li>sintesi del predefinito;</li>
+            <li><b>sweep di controllo</b> — tutti gli altoparlanti suonano insieme attraverso il predefinito calcolato. Ciò verifica se il subwoofer e le portiere sommano in fase o si annullano alla frequenza di crossover.</li>
+          </ul>
+        </div></li>
+        <li><div>
+          <h3>Esamina il rapporto e applica</h3>
+          <p>La schermata <span class="ui">Calibration Results & Auto-EQ</span> riassume le proprietà acustiche rilevate:</p>
+          <ul>
+            <li><span class="ui">Cosa ha rilevato la misurazione</span> — elenco dei difetti con grado di certezza (<span class="ui">Certo</span>, <span class="ui">Probabile</span>, <span class="ui">Possibile</span>) e rimedi suggeriti;</li>
+            <li>frequenza di crossover — punto in cui le portiere passano i bassi al subwoofer;</li>
+            <li>ritardi calcolati per canale;</li>
+            <li>curva di correzione dell'equalizzatore.</li>
+          </ul>
+          <p>Pulsanti in basso:</p>
+          <ul>
+            <li><span class="ui">Apply Auto-EQ</span> — salva e attiva il nuovo predefinito;</li>
+            <li><span class="ui">Save Archive (.zip)</span> — salva il file diagnostico da inviarci;</li>
+            <li><span class="ui">Close</span> — esce senza modificare le impostazioni.</li>
+          </ul>
+          <p>Il suggerimento di invertire la fase del subwoofer (interruttore <span class="val">0/180</span> o inversione cavi) compare solo se lo sweep di controllo ha mostrato una reale cancellazione di fase.</p>
+        </div></li>
+        <li><div>
+          <h3>Regola la compensazione Loudness</h3>
+          <p>Apri la scheda <span class="ui">Loudness</span>. L'udito percepisce meno i bassi a basso volume. Il Loudness compensa esaltando le frequenze basse quando si abbassa il volume.</p>
+          <ul>
+            <li><span class="ui">Punto di calibrazione</span> — volume oltre il quale il Loudness non applica alcuna enfasi. Nei predefiniti misurati si aggancia al livello di ascolto di partenza. Se era inferiore al volume di test, l'app fissa il punto a <span class="val">18 dB</span> sopra il livello di ascolto, tra i passi <span class="val">16</span> e <span class="val">24</span>;</li>
+            <li><span class="ui">Intensità di correzione</span> — entità dell'incremento dei bassi.</li>
+          </ul>
+          <p>L'app si basa sui decibel effettivi misurati al passaggio 2 e non su semplici numeri di passo. Il controllo automatico in basso segnala eventuali incongruenze: il pulsante <span class="ui">Imposta correttamente</span> risolve subito i parametri.</p>
+        </div></li>
+        <li><div>
+          <h3>Acquisisci lo zero RTA</h3>
+          <p>Apri <span class="ui">Test Audio</span> → <span class="ui">Rumore rosa</span> → <span class="ui">Zero RTA</span>. Questo fissa una linea di riferimento stabile per la curva dell'analizzatore in tempo reale al posto di una media mobile.</p>
+          <p>Una singola pressione acquisisce entrambi gli zeri, Musica e Microfono. L'app imposta per pochi secondi il volume usato durante la calibrazione del microfono e ripristina il livello precedente. Lo zero del microfono resta vincolato a quel passo e la curva non oscilla regolando il volume.</p>
+        </div></li>
+        <li><div>
+          <h3>Sincronizza il widget con la musica</h3>
+          <p><span class="ui">Impostazioni wDSP</span> → <span class="ui">Sincronizzazione con l'audio</span> → <span class="ui">Sincronizza</span>. L'app calcola il ritardo del percorso audio rispetto al rendering su schermo del tuo dispositivo. Le barre si muoveranno esattamente a tempo di musica.</p>
+        </div></li>
+      </ol>
+    </section>
+
+    <section id="calibrations">
+      <h2>Cosa viene calibrato e perché</h2>
+      <p>L'app prevede cinque procedure di calibrazione distinte con finalità completamente differenti:</p>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>Elemento</th><th>Dove</th><th>Cosa rileva l'app</th><th>Su cosa influisce</th><th>Quando ripetere</th></tr></thead>
+          <tbody>
+            <tr><td>Microfono</td><td>Impostazioni → Calibrate Microphone</td><td>Risposta del microfono interno su bassi e acuti rispetto all'orecchio</td><td>Misurazione abitacolo, spettro Microfono</td><td>Nuovo microfono o cambio di fissaggio</td></tr>
+            <tr><td>Passi di volume</td><td>Automatico con calibrazione microfono</td><td>Attenuazione esatta in dB per i passi <span class="val">1…32</span> su autoradio e ampli</td><td>Loudness, scala RTA del microfono</td><td>Sempre insieme al microfono</td></tr>
+            <tr><td>Abitacolo</td><td>Impostazioni → Cabin Acoustic Calibration</td><td>Difetti, ritardi, crossover e predefinito Auto-EQ</td><td>Nuovo predefinito</td><td>Sostituzione altoparlanti, subwoofer, insonorizzazione</td></tr>
+            <tr><td>Zero RTA</td><td>Test Audio → Rumore rosa → Zero RTA</td><td>Linea di riferimento fissa per il grafico</td><td>Solo visualizzazione dello spettro</td><td>Dopo la calibrazione del microfono; non altera il suono</td></tr>
+            <tr><td>Sincronizzazione audio</td><td>Impostazioni → Sincronizzazione audio</td><td>Ritardo dell'audio rispetto alle immagini a schermo</td><td>Solo visualizzazione di widget e salvaschermo</td><td>Dopo aggiornamenti firmware o del modulo audio</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Il punto di calibrazione Loudness è un parametro di configurazione e non una misurazione automatica: viene impostato dalla procedura guidata o regolato manualmente.</p>
+    </section>
+
+    <section id="tabs">
+      <h2>Schede della schermata principale</h2>
+      <dl class="tabs">
+        <dt>Equalizzatore</dt>
+        <dd>16 bande, selettore predefiniti in alto e blocco <span class="ui">Subwoofer</span>: frequenza di taglio e livello. Ciascun cursore indica la variazione in dB al centro banda. Le bande contigue si sovrappongono armoniosamente: tre cursori a <span class="val">+4</span> creano una linea uniforme di <span class="val">+4</span> senza picchi artificiali. Il grafico illustra la risposta effettiva trasmessa al processore DSP.</dd>
+        <dt>Loudness</dt>
+        <dd>Compensazione fisiologica (<span class="ui">Loudness</span>), soglia di riferimento e incremento bassi. <span class="ui">Compensazione subwoofer</span> estende l'enfasi al canale del sub. <span class="ui">Taglio Alti</span> addolcisce le asprezze ad alto volume. <span class="ui">Ultra Bass</span> garantisce bassi profondi supplementari al di sotto del volume prescelto. Il grafico illustra la curva dinamica effettiva.</dd>
+        <dt>Ritardi</dt>
+        <dd>Allineamento temporale canale per canale in millisecondi e centimetri affinché le onde sonore giungano simultaneamente alle orecchie. Calcolato durante la misurazione dell'abitacolo. I tasti <span class="ui">Sposta anteriori insieme</span> / <span class="ui">Sposta posteriori insieme</span> muovono le coppie preservandone gli scarti. Include audio surround e Rear-Fill.</dd>
+        <dt>Altri</dt>
+        <dd>Filtri degli altoparlanti in portiera: il <span class="ui">Filtro</span> passa-alto elimina frequenze non gestibili dalle portiere trasferendole al subwoofer; l'<span class="ui">Incremento</span> valorizza la frequenza prescelta. Controlli separati per fronte e retro; <span class="ui">Come davanti</span> replica i valori. Include fader e bilanciamento.</dd>
+        <dt>GALA</dt>
+        <dd>Incremento automatico del volume in base alla velocità tramite GPS per superare il rumore di marcia. Passo di velocità, soglia di intervento e guadagno massimo. Si disattiva durante le telefonate.</dd>
+        <dt>Test Audio</dt>
+        <dd>Segnali per verifica all'ascolto: tracce stem (basso, voce, batteria, melodia) combinabili a piacere, rumore rosa calibrato, generatore sinusoidale, sweep, controllo sequenziale per singolo altoparlante e modalità <span class="ui">Solo Subwoofer</span>. Tutto transita attraverso il predefinito attivo senza alterare i valori memorizzati.</dd>
+      </dl>
+    </section>
+
+    <section id="spectrum">
+      <h2>Spettro e RTA</h2>
+      <p>Il selettore <span class="ui">Spettro</span> sopra l'equalizzatore ha tre posizioni. Nelle impostazioni si sceglie la modalità grafica: barre o curva dinamica in tempo reale.</p>
+      <dl class="tabs">
+        <dt>Spento</dt>
+        <dd>Nessuno spettro nella schermata principale. Il widget nella barra di stato e il salvaschermo continuano a funzionare regolarmente.</dd>
+        <dt>Musica</dt>
+        <dd>Il flusso musicale trattato dal predefinito attivo: <b>come dovrebbe suonare</b>. Non dipende dal volume impostato.</dd>
+        <dt>Microphone</dt>
+        <dd><b>La resa effettiva nell'abitacolo</b> catturata dal microfono dell'autoradio, sulla stessa scala di Musica. Dove le due curve divergono, l'auto aggiunge o toglie qualcosa.</dd>
+      </dl>
+      <p>La radio FM non passa attraverso Android, pertanto in modalità Musica non visualizza spettro; la modalità Microphone opera regolarmente anche con la radio.</p>
+    </section>
+
+    <section id="presets">
+      <h2>Predefiniti e automazione</h2>
+      <ul>
+        <li>Gestione dei predefiniti nella schermata principale: creazione, ridenominazione, eliminazione, esportazione e importazione.</li>
+        <li><span class="ui">Automazione dei preset</span> associa profili alle app multimediali: la radio impiega il suo profilo, lo streaming Bluetooth un altro. È previsto un profilo per la voce <span class="ui">Chiamata telefonica</span>. <span class="ui">Standard globale</span> opera per tutto il resto.</li>
+        <li>Il volume viene memorizzato in modo indipendente per ciascuna sorgente sonora.</li>
+        <li><span class="ui">Backup impostazioni</span> e <span class="ui">Ripristina impostazioni</span>: salva l'intera configurazione con i predefiniti o le sole impostazioni.</li>
+        <li><span class="ui">Riprendi il lettore dopo il riavvio</span> e <span class="ui">Riprendi il lettore dopo la sospensione</span>: il lettore in riproduzione riparte da solo senza sovrapporsi al navigatore. La radio si ripristina da sola. Per la sospensione, tocca <span class="ui">Consenti a wDSP di restare attivo</span> e abilita wDSP nell'elenco.</li>
+      </ul>
+    </section>
+
+    <section id="looks">
+      <h2>Widget e salvaschermo</h2>
+      <p><span class="ui">Visualizzatore barra di stato</span> — mini-spettro integrato nella barra Android: larghezza, scostamento, altezza, stili (barre tradizionali, Outrun, VU meter, oscilloscopio) e combinazioni cromatiche.</p>
+      <p><span class="ui">Salvaschermo</span> — visualizzatore a schermo intero durante i periodi di inattività: tempo di attesa, luminosità Giorno/Notte, lista delle app escluse. Il navigatore impostato nell'autoradio non viene mai nascosto. <span class="ui">Copri la barra di stato</span> decide se celare o meno la barra. Le modalità di controllo sono illustrate nella mappa sottostante.</p>
+      <figure style="margin:1.5rem 0 1rem;">
+        <img src="screensaver_map.svg" alt="Mappa dei comandi del salvaschermo: tocchi a sinistra, scorrimenti a destra" style="width:100%;max-width:900px;display:block;">
+        <figcaption style="font-size:0.85rem;color:var(--muted);margin-top:0.5rem;">Zone del salvaschermo: tocchi (sinistra) e scorrimenti (destra).</figcaption>
+      </figure>
+      <h3>Zone tattili del salvaschermo</h3>
+      <p><b>Tocchi (schema a sinistra):</b></p>
+      <ul>
+        <li><b>1</b> — metà superiore: chiude il salvaschermo;</li>
+        <li><b>2</b> — metà inferiore, terzo sinistro (fino al bordo): brano precedente;</li>
+        <li><b>3</b> — zona centrale: pausa / riproduzione;</li>
+        <li><b>4</b> — terzo destro (fino al bordo): brano successivo;</li>
+        <li><b>5</b> — copertina / icona del lettore (in basso a sinistra): apre il lettore o la radio attiva;</li>
+        <li><b>6</b> — pulsante stile (in basso a destra): tocco cambia stile; tenere premuto 1 s apre l'equalizzatore wDSP.</li>
+      </ul>
+      <p><b>Scorrimenti (schema a destra)</b> — l'effetto dipende dal bordo su cui si inizia il tocco. Si può scorrere in qualsiasi direzione; verso l'alto o verso destra incrementa il valore. Il parametro viene memorizzato al rilascio:</p>
+      <ul>
+        <li><b>7</b> — dal bordo superiore: oscuramento dello sfondo (trasparenza);</li>
+        <li><b>8</b> — dal bordo inferiore: larghezza del visualizzatore;</li>
+        <li><b>9</b> — dal bordo sinistro: altezza;</li>
+        <li><b>10</b> — dal bordo destro: luminosità (separata giorno e notte);</li>
+        <li><b>11</b> — dal centro: volume generale (l'intero schermo corrisponde alla scala 0–32).</li>
+      </ul>
+      <p><span class="ui">Stile interfaccia</span>: <span class="ui">Classico (Originale)</span> — impostazione originaria; <span class="ui">Moderno</span> — design rinnovato e adattivo. Entrambi offrono modalità diurna e notturna.</p>
+    </section>
+
+    <section id="trouble">
+      <h2>Risoluzione dei problemi</h2>
+      <h3>"Microfono occupato, uso dello spettro calcolato"</h3>
+      <p>Un'altra app sta occupando il microfono, tipicamente Google Assistant. Riavvia l'autoradio: wDSP parte presto per riservare il microfono. Con permessi di root, wDSP lo acquisisce in autonomia.</p>
+      <h3>La misurazione segnala "misurato nel rumore"</h3>
+      <p>L'ambiente era troppo rumoroso. L'app regola da sé il volume degli sweep: chiudi porte e finestrini, spegni motore e ventilazione e ripeti la prova.</p>
+      <h3>I passi di volume non sono stati registrati</h3>
+      <p>Un disturbo ha coperto il suono o il microfono ha mancato la ricezione. L'app mantiene le tabelle calibrate in precedenza; senza tabella usa passi nominali. Ripeti la calibrazione del microfono in un ambiente privo di rumori.</p>
+      <h3>La linea zero del microfono oscilla al variare del volume</h3>
+      <p>Lo zero del microfono è stato acquisito prima che venisse attivato il monitoraggio del volume. Acquisisci nuovamente lo zero con il rumore rosa (passaggio 6).</p>
+      <h3>Avviso rosso "Microfono sovraccarico" sopra l'equalizzatore</h3>
+      <p>Il segnale del microfono è eccessivo e satura l'ingresso, per lo più con bassi marcati. Durante il sovraccarico, la curva opera con AGC: livello allineato a Musica, forma approssimata. Appena il segnale scende l'avviso sparisce. Se si presenta a volume normale, abbassa la sensibilità del microfono nelle impostazioni dell'autoradio.</p>
+      <h3>Il timbro sonoro cambia dopo il riavvio</h3>
+      <p>I parametri del DSP vengono ripristinati all'avvio dal servizio in background senza aprire finestre. Verifica che siano concessi <span class="ui">Attività in background</span> e <span class="ui">funzionamento durante la sospensione</span>.</p>
+    </section>
+
+    <section id="send">
+      <h2>Condivisione delle misurazioni</h2>
+      <p>Al termine della misurazione tocca <span class="ui">Save Archive (.zip)</span>. Conterrà i registri delle misurazioni, la curva del microfono, la tabella dei passi di volume e il rapporto di sistema sincronizzato.</p>
+      <p>Invia l'archivio, il rapporto di sistema (<span class="ui">Diagnostica</span> → <span class="ui">Rapporto di sistema</span>) e due righe sui cambiamenti percepiti al gruppo del mod: <a href="https://t.me/kostyamat_dev/92" target="_blank" rel="noopener">t.me/kostyamat_dev/92</a>. La versione originale non include la misurazione dell'abitacolo, pertanto le misurazioni vanno al gruppo del mod. Progetto originale: <a href="https://t.me/wDSPapp" target="_blank" rel="noopener">t.me/wDSPapp</a>.</p>
+      <p>Indica marca e modello dell'auto, posizione del microfono e tipo di amplificatore.</p>
+    </section>
+
+    <footer>
+      Manuale per wDSP 1.1 "Bulldozer" mod, 15.10.2026. wDSP — di Volodymyr Chebanenko (khiivl); mod — Kostiantyn Matviyevskyy.
+    </footer>
+  </main>
+</div>

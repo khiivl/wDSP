@@ -10,7 +10,6 @@
             android:label="DSP"
             android:name=".SoundActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:maxSdkVersion="28"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
