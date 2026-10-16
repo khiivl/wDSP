@@ -26,34 +26,15 @@ Every UI change goes into **Classic** (the author's) and **Modern** (ours), day 
   sub split" claim (Gemini 10.09/15.09) is wrong, `platform/03-SOUND-PROCESSOR.md` §5. Owed on the wire:
   doors muted, −10 dB at 31.5 Hz on the EQ — the sub's level must not move.
 - Call is not media (`6c7aae4`) proven 15.10 on a BT call: no session sweep, analyser resumes after.
-- Desktop: `git stash` holds Сова's raw translations (superseded by `8e9ce7f`) — droppable.
 
-## What the docs now say, and why (15.10, after the owner caught false claims in public posts)
+## Release docs: rules learned 15.10 (details in commits `461bb7c`..`dc6bbb0`)
 
-- **Attribution rule: author vs mod is read from `origin/master`, never from our notes.** The release
-  notes had put Classic/Modern, the pair locks and "more visualisations" under "the author's 1.0";
-  his master (1.0.2) has none of them. Also invented: "a crash on the Loudness tab" (the owner: the mod
-  never had it, 1.0 came in already fixed). Both went into XDA/Telegram before being caught.
-- **Notes structure (all 9 languages):** NEW = «FROM THE AUTHOR'S APP (khiivl, up to 1.0.2)» / «ONLY IN
-  THE MOD» / «New in the mod in 1.1»; FIXED = «Author (khiivl)» (only the 1.0.1 sub-level race,
-  `18cf110`) / «Mod · Start-up and processor load» / «Mod · Other». Owner: «а то читаєш і думаєш - а
-  нахріна мені мод?» — the mod's value goes first and in full.
-- **Only-in-the-mod facts, each checked against master:** cabin measurement; microphone (the author's
-  code records nothing) incl. RTA on analogue FM (`RadioMicCapture`); native C++ analyser (author:
-  Java `SpectrumAnalyzerView.processFft`, no native code); status bar visualiser + screensaver
-  (`ScreensaverManager`, `StatusBarVisualizer*` absent in master); events instead of the author's
-  two 200 ms loops (`McuService` primary/secondaryRunnable vs our `05dd980`, `46a717d`, `62919e2`);
-  Modern (DECISIONS 05.10). Start-up/load items come from `e5caded` (checked against commits after
-  13.09). **No CPU before/after numbers exist** — only ~14% of one core on the screensaver
-  (SCREENSAVER_RADIO_CONTRACT §5); do not invent a comparison.
-- **Support banners are at the TOP of Settings** (`activity_settings.xml:32`), not the bottom.
-- **Manuals:** every `<span class="ui">` that has an app string carries `values-xx/strings.xml` verbatim
-  (English where the app is untranslated). Сова had translated six languages from her own uk, not EN —
-  fixed (`8e9ce7f`).
-- **README:** 🇺🇦/🇬🇧 header links, full Ukrainian block, manuals + notes tables in 9 languages,
-  visualisations/screensaver and player-resume sections, the same only-in-mod facts.
-- Public posts were written in chat, not stored: XDA (BBCode, support in a named spoiler), Telegram
-  EN/UA, 4PDA (RU, no spoiler, **no Telegram links**, support → "the two cards at the top of Settings").
+- **Author vs mod is read from `origin/master`, never from our notes** — false "author's 1.0" claims
+  and an invented "Loudness tab crash" reached XDA/Telegram before the owner caught them.
+- Notes (9 languages): «from the author's app» / «only in the mod» / «new in 1.1»; the mod's value
+  first. No CPU before/after numbers exist — do not invent a comparison.
+- Manuals: UI names verbatim from `values-xx/strings.xml`. Support banners are at the TOP of Settings.
+- Public posts (XDA, Telegram, 4PDA — no Telegram links there) were written in chat, not stored.
 
 ## ⏳ Next
 
