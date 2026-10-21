@@ -7,10 +7,6 @@ This is a free and open-source DSP app designed to fully replace the stock DSP a
 The app communicates with the MCU using the framework, so it doesn't require rooting the device.
 Compatible with vertical and horizontal head units with the BU32107 chip.
 
-Made in Germany, by a Ukrainian guy.
-
-I have to give credits to the people who taught me a lot i know about sound for free: oratory1990 (legend), Crinacle (headphone), Underbelly from YSAP (Uncle Joe) and, of course, Dan Worrall (the trustworthy British accent). Credits to Sam Battle from LMNC for making me interested in audio circuits. Many thanks to Kostyantyn Matviyevskyy for mentoring, contributions, insides into the inner workings of the head unit and the inspiration for this project and making difficult things simple. Try his mod of wDSP if you want something different, because everyone has their own preferences and vision.
-
 Measure accurately, correct surgically, and stop trying to boost acoustic nulls.
 
 Telegram group for discussion and bug reporting (also use Issues on GitHub): https://t.me/wDSPapp
