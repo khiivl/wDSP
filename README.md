@@ -7,8 +7,6 @@ This is a free and open-source DSP app designed to fully replace the stock DSP a
 The app communicates with the MCU using the framework, so it doesn't require rooting the device.
 Compatible with vertical and horizontal head units with the BU32107 chip.
 
-Measure accurately, correct surgically, and stop trying to boost acoustic nulls.
-
 Telegram group for discussion and bug reporting (also use Issues on GitHub): https://t.me/wDSPapp
 
 If you want to buy me a coffee or otherwise support me financially, use this link: https://buymeacoffee.com/radiorubka or this link: https://paypal.me/wDSPApp. If you don't want to support me specifically, but want to make a donation for the good, please use this link to support the soldiers who are currently defending Ukraine from the russian aggression: https://www.sternenkofund.org/en/donate
