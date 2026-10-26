@@ -29,6 +29,26 @@ android {
 
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
+
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++17'
+            }
+        }
+        ndk {
+            // The head units this targets are UIS7862/ums512, all 64-bit (arm64-v8a); armeabi-v7a
+            // is there only so an older board doesn't end up without a library at all. x86/x86_64
+            // are for local emulator testing only - no real head unit is x86 - but without them an
+            // x86 emulator has no native library at all and Android Studio refuses to deploy.
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64', 'x86'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+            version '3.22.1'
+        }
     }
 
     signingConfigs {

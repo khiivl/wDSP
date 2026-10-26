@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.Process;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -126,6 +127,11 @@ public class McuService extends Service implements LocationListener {
     private int lastGalaTier         = -1; // last confirmed tier index
     private long tierChangeTimestamp = 0;   // when the current pending tier was first seen
     private long lastFadeStepTime    = 0;   // last time we moved applied offset by ±1
+    // When a manual volume adjustment (step 5 below) was last detected - fastPollReason() keeps
+    // the poll at its fast pace for a short grace period afterward, so a hand still turning the
+    // knob doesn't get caught by the slow idle pace mid-adjustment.
+    private long lastUserVolumeActionMs = 0;
+    private static final long GALA_USER_GRACE_PERIOD_MS = 2000;
 
     private boolean wasMuted = false;
 
@@ -157,6 +163,25 @@ public class McuService extends Service implements LocationListener {
     private LocationManager locationManager;
     private Map<String, String> playerMap = new HashMap<>();
     private final Map<Byte, byte[]> mcuCache = new HashMap<>();
+
+    /** Forgets what we think the chip already holds, so the next applyCurrentSettings() says
+     * everything again instead of silently skipping it as "unchanged." Both caches have to go
+     * together - clearing mcuCache alone, with lastComputed*Data still remembered, would let the
+     * re-apply stop one layer up ("same packet as last computed") and never even reach
+     * sendToHardware()'s own dedupe check.
+     * <p>Needed because sendToHardware() records a packet as sent once the reflective call
+     * doesn't throw - which only means the framework accepted it, not that it reached a MCU link
+     * that's actually up yet. On this platform BOOT_COMPLETED can fire before the UART to the MCU
+     * opens, so the very first apply after boot can get remembered as delivered when it never
+     * really was - after which every later apply (this one included) sends nothing, because the
+     * cache insists the chip already has it. Call this on ACC_ON specifically: it's the
+     * platform's own statement that the MCU link now genuinely exists. */
+    private void forgetChipState() {
+        mcuCache.clear();
+        lastComputedEqData = null;
+        lastComputedSubData = null;
+        lastComputedBassBoostData = null;
+    }
 
     private final float[] fmOffsets = new float[16];
     private final byte[] eqData = new byte[12];
@@ -271,6 +296,9 @@ public class McuService extends Service implements LocationListener {
                 if ("com.qf.action.ACC_ON".equals(action)
                         || "android.intent.action.QUICKBOOT_POWERON".equals(action)
                         || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
+                    // See forgetChipState()'s own doc - this is the fix for settings not reliably
+                    // reaching the chip after boot/wake, not a timing workaround.
+                    forgetChipState();
                     applyCurrentSettings();
                     backgroundHandler.postDelayed(() -> {
                         startPolling();
@@ -281,6 +309,10 @@ public class McuService extends Service implements LocationListener {
                     stopPolling();
                     stopGps();
                 }
+                else if ("com.qf.action.VOLUME_CHANGED".equals(action)
+                        || "com.qf.action.MUTE_EQ".equals(action)) {
+                    wakePoll();
+                }
                 else if ("com.radiorubka.wdsp.UI_ACTIVE".equals(action)) {
                     isUiVisible = true;
                     forceUiUpdate();
@@ -290,6 +322,7 @@ public class McuService extends Service implements LocationListener {
                 }
                 else if ("com.radiorubka.wdsp.SIMULATE_SPEED".equals(action)) {
                     simulatedSpeedKmh = intent.getFloatExtra("speed", -1.0f);
+                    wakePoll(); // GALA should react to a simulated speed change immediately
                 }
                 else if ("com.radiorubka.wdsp.SUB_GAIN_UP".equals(action)) {
                     adjustSubGain(1);
@@ -356,7 +389,12 @@ public class McuService extends Service implements LocationListener {
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        workerThread = new HandlerThread("wDSP_Worker", -16); // THREAD_PRIORITY_AUDIO
+        // Normal priority, not THREAD_PRIORITY_AUDIO (-16) - this thread polls volume/GALA/
+        // player state and talks to the MCU over reflection, it never touches actual audio PCM.
+        // Running it at realtime audio priority was measured (kostyamat's branch, bench 02.10) to
+        // contribute to a boot-time ANR cascade: a thread this aggressive, started this early,
+        // competing with threads that genuinely need that priority.
+        workerThread = new HandlerThread("wDSP_Worker", Process.THREAD_PRIORITY_DEFAULT);
         workerThread.start();
         backgroundHandler = new Handler(workerThread.getLooper());
 
@@ -386,6 +424,10 @@ public class McuService extends Service implements LocationListener {
         IntentFilter controlFilter = new IntentFilter();
         controlFilter.addAction("com.qf.action.ACC_ON");
         controlFilter.addAction("com.qf.action.ACC_OFF");
+        // Platform broadcasts, raised after every volume RPC to the MCU and on mute - direct,
+        // zero-delay wake triggers for the poll (see pollingRunnable's own doc).
+        controlFilter.addAction("com.qf.action.VOLUME_CHANGED");
+        controlFilter.addAction("com.qf.action.MUTE_EQ");
         controlFilter.addAction("android.intent.action.QUICKBOOT_POWERON");
         controlFilter.addAction(Intent.ACTION_BOOT_COMPLETED);
         controlFilter.addAction("com.radiorubka.wdsp.UI_ACTIVE");
@@ -483,38 +525,115 @@ public class McuService extends Service implements LocationListener {
         return START_STICKY;
     }
 
+    // Every property this app's own decisions actually read - the live source, the four stored
+    // per-source volume levels, the global mute, and the call state. Reverse-engineered on this
+    // exact hardware (same unit the owner confirmed as identical to the one they were measured
+    // on). A property added to checkVolumeAndGala()/checkPlayer() needs adding here too.
+    private static final String[] WATCHED_PROPERTIES = {
+            "sys.current.vol.type",
+            "sys.media.vol", "sys.radio.vol", "sys.call.vol", "sys.aux.vol",
+            "sys.mute.state",
+            "sys.qf.call_state",
+            "sys.qf.sound.channel",
+            "sys.qf.radio.status",
+            "sys.qf.last_audio_src",
+    };
+
+    /** Wakes the poll on any watched property change; null where the native wait isn't available
+     * on this unit (PropertyWatch falls back silently - the poll's own idle-pace fallback tick
+     * still catches anything the property watch would otherwise have woken it for, just slower). */
+    private volatile PropertyWatch propertyWatch;
+    private volatile boolean levelCheckPending;
+    private static final long LEVEL_CHECK_DELAY_MS = 300;
+
     private void startPolling() {
         if (!isPolling) {
             isPolling = true;
-            backgroundHandler.post(primaryRunnable);
-            backgroundHandler.post(secondaryRunnable);
+            backgroundHandler.post(pollingRunnable);
+        }
+        if (propertyWatch == null || !propertyWatch.isRunning()) {
+            propertyWatch = PropertyWatch.start(WATCHED_PROPERTIES, this::onPropertyChanged);
+            if (propertyWatch == null) {
+                Log.w(TAG, "native property wait unavailable - relying on the idle-pace fallback tick only");
+            }
         }
     }
 
     private void stopPolling() {
         isPolling = false;
-        backgroundHandler.removeCallbacks(primaryRunnable);
-        backgroundHandler.removeCallbacks(secondaryRunnable);
+        backgroundHandler.removeCallbacks(pollingRunnable);
+        if (propertyWatch != null) {
+            propertyWatch.stop();
+            propertyWatch = null;
+        }
     }
 
-    private final Runnable secondaryRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (!isPolling) return;
-            checkPlayer();
-            checkForBug();
-            backgroundHandler.postDelayed(this, 200);
-        }
-    };
+    /** Called on PropertyWatch's own background thread. Batched - LEVEL_CHECK_DELAY_MS after the
+     * first change in a burst, not once per change, since a single source switch touches several
+     * of the watched properties at once. */
+    private void onPropertyChanged() {
+        if (levelCheckPending) return;
+        levelCheckPending = true;
+        backgroundHandler.postDelayed(() -> {
+            levelCheckPending = false;
+            wakePoll();
+        }, LEVEL_CHECK_DELAY_MS);
+    }
 
-    private final Runnable primaryRunnable = new Runnable() {
+    /** Fast pace while GALA genuinely has something in flight (see fastPollReason()) - otherwise
+     * a slow fallback tick, not a full stop: checkPlayer()'s source-change detection has no event
+     * to wake it on (that would need a NotificationListenerService/MediaSession hook, a separate,
+     * bigger change), so this is its safety net instead of letting it go stale indefinitely.
+     * <p>This replaces what used to be two independent runnables ticking at 200ms forever,
+     * regardless of whether anything was actually happening - every tick reads hardware volume
+     * state through reflection into the QF framework, which is a real, measurable binder-call
+     * cost sustained the entire time the unit is powered on. Woken immediately by
+     * onPropertyChanged()/VOLUME_CHANGED/MUTE_EQ/a GPS fix/a simulated-speed change instead of
+     * waiting for the next tick. */
+    private static final long POLL_FAST_MS = 200;
+    private static final long POLL_IDLE_MS = 2000;
+
+    private final Runnable pollingRunnable = new Runnable() {
         @Override
         public void run() {
             if (!isPolling) return;
             checkVolumeAndGala();
-            backgroundHandler.postDelayed(this, 200);
+            checkPlayer();
+            checkForBug();
+            backgroundHandler.postDelayed(this, needsFastPoll() ? POLL_FAST_MS : POLL_IDLE_MS);
         }
     };
+
+    /** Runs the poll right now instead of waiting for its next scheduled tick. Safe from any
+     * thread - posts/removes on backgroundHandler rather than running inline. */
+    private void wakePoll() {
+        if (!isPolling) return;
+        backgroundHandler.removeCallbacks(pollingRunnable);
+        backgroundHandler.post(pollingRunnable);
+    }
+
+    private String lastFastPollReason;
+
+    private boolean needsFastPoll() {
+        String reason = fastPollReason();
+        if (!Objects.equals(reason, lastFastPollReason)) {
+            lastFastPollReason = reason;
+            Log.i(TAG, reason != null ? "poll fast pace: " + reason : "poll fast pace off");
+        }
+        return reason != null;
+    }
+
+    /** Why the poll needs its fast pace, or null when it doesn't; named for the log. GALA works
+     * in time - the hold timer, one fade step per tick, a hand still on the knob - and those need
+     * the fast pace; a parked car with GALA settled needs none of it. */
+    private String fastPollReason() {
+        float speed = simulatedSpeedKmh > 0f ? simulatedSpeedKmh : currentSpeedKmh;
+        if (isGalaEnabled() && speed >= cachedGalaMinV) return "GALA enabled, at/above its threshold";
+        if (currentAppliedOffset > 0) return "GALA boost applied";
+        if (pendingTargetOffset != currentAppliedOffset) return "GALA boost fading";
+        if (System.currentTimeMillis() - lastUserVolumeActionMs < GALA_USER_GRACE_PERIOD_MS) return "hand on the volume knob";
+        return null;
+    }
 
 
     // This is used to check for the bug in the jitu (maybe also haiwai) f/w
@@ -713,6 +832,7 @@ public class McuService extends Service implements LocationListener {
                 baseStandstillVolume = 0;
             }
             lastAppliedVolume = hardwareVol;
+            lastUserVolumeActionMs = System.currentTimeMillis();
             Log.d(TAG, "Manual Adjust: New Vol=" + hardwareVol + " -> New Base=" + baseStandstillVolume);
         }
 
@@ -1365,7 +1485,12 @@ public class McuService extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
-        backgroundHandler.post(() -> currentSpeedKmh = location.getSpeed() * 3.6f);
+        backgroundHandler.post(() -> {
+            currentSpeedKmh = location.getSpeed() * 3.6f;
+            // A fresh speed is exactly what needsFastPoll() decides the poll's pace on - wake it
+            // now instead of waiting for whatever pace it's currently at to come back around.
+            wakePoll();
+        });
     }
 
     @Override public void onProviderEnabled(@NonNull String provider) {}

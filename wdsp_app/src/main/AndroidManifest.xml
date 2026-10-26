@@ -57,6 +57,10 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.REBOOT" />
+                <!-- An app update kills the service and nothing else restarts it (see
+                     BootReceiver's own doc) - without this it stays dead until the next power
+                     cycle. -->
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>

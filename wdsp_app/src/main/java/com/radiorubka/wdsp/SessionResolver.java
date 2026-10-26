@@ -178,7 +178,13 @@ public final class SessionResolver {
             forget(cached);
         }
 
-        int swept = sweep();
+        // Skip the brute-force sweep entirely when nothing is playing - it's guaranteed to find
+        // nothing in that case anyway (every one of up to MAX_CANDIDATES probes would fail), so
+        // this doesn't change the outcome, only avoids hundreds of pointless cross-process
+        // Visualizer-creation attempts into audioserver. Measured elsewhere (kostyamat's branch,
+        // bench 02.10) to be a real contributor to a boot-time ANR cascade when this ran
+        // unconditionally right as the app starts, before anything has begun playing.
+        int swept = isAnythingPlaying() ? sweep() : -1;
         if (swept >= 0) {
             Log.i(TAG, "Resolved by sweep: session " + swept + " in "
                     + (System.currentTimeMillis() - started) + " ms");
@@ -188,6 +194,17 @@ public final class SessionResolver {
                     + (System.currentTimeMillis() - started) + " ms)");
         }
         return swept;
+    }
+
+    /** Fails open (assumes playing) on error - better to sweep unnecessarily than silently stop
+     * resolving sessions forever because this one check broke. */
+    private boolean isAnythingPlaying() {
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            return am == null || am.isMusicActive();
+        } catch (Throwable t) {
+            return true;
+        }
     }
 
     /**
