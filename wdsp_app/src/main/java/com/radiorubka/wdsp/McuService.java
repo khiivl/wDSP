@@ -203,6 +203,29 @@ public class McuService extends Service implements LocationListener {
     private int aux_standstill = -1;
     private int radio_standstill = -1;
 
+    // Grace period after an audio stream/source switch (e.g. Call -> Media) to freeze
+    // manual knob adjustment detection (Step 5) while hardware volume and framework state settle.
+    private long lastSourceSwitchMs = 0;
+    private static final long SOURCE_SWITCH_GRACE_PERIOD_MS = 1200;
+
+    /**
+     * Keeps the per-source standstill volume snapshot in sync with the current base standstill volume
+     * during normal playback, ensuring that whenever an audio stream switch occurs, the last known base
+     * is already recorded and never left as uninitialized (-1).
+     */
+    private void syncCurrentStandstill(String type, int baseVol) {
+        if (baseVol < 0 || type == null) return;
+        if ("media_type".equals(type)) {
+            media_standstill = baseVol;
+        } else if ("btcall_type".equals(type)) {
+            btcall_standstill = baseVol;
+        } else if ("aux_type".equals(type)) {
+            aux_standstill = baseVol;
+        } else if ("radio_type".equals(type)) {
+            radio_standstill = baseVol;
+        }
+    }
+
     private void initReflection() {
         try {
             // noinspection PrivateApi
@@ -287,6 +310,21 @@ public class McuService extends Service implements LocationListener {
         });
     };
 
+    // Staged wake sequence runnables to allow MCU/DSP hardware stabilization
+    private final Runnable wakeResetRunnable = () -> {
+        Log.d(TAG, "Wake Stage 1: Forgetting chip state 500ms after wake");
+        forgetChipState();
+    };
+    private final Runnable wakeApplyRunnable = () -> {
+        Log.d(TAG, "Wake Stage 2: Applying settings 500ms after chip reset (1000ms after wake)");
+        applyCurrentSettings();
+    };
+    private final Runnable wakePollGpsRunnable = () -> {
+        Log.d(TAG, "Wake Stage 3: Resuming background polling and GPS");
+        startPolling();
+        startGps();
+    };
+
     private final BroadcastReceiver controlReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -296,16 +334,27 @@ public class McuService extends Service implements LocationListener {
                 if ("com.qf.action.ACC_ON".equals(action)
                         || "android.intent.action.QUICKBOOT_POWERON".equals(action)
                         || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
-                    // See forgetChipState()'s own doc - this is the fix for settings not reliably
-                    // reaching the chip after boot/wake, not a timing workaround.
-                    forgetChipState();
-                    applyCurrentSettings();
-                    backgroundHandler.postDelayed(() -> {
-                        startPolling();
-                        startGps();
-                    }, 3000);
+                    // Cancel any pending wake stages in case multiple wake broadcasts arrive in rapid succession
+                    backgroundHandler.removeCallbacks(wakeResetRunnable);
+                    backgroundHandler.removeCallbacks(wakeApplyRunnable);
+                    backgroundHandler.removeCallbacks(wakePollGpsRunnable);
+
+                    // Stage 1: Run forgetChipState() 500ms after wake from sleep to give the MCU
+                    // and audio DSP chip time to power up rails, exit hardware reset, and complete internal init.
+                    backgroundHandler.postDelayed(wakeResetRunnable, 500);
+
+                    // Stage 2: Run applyCurrentSettings() 500ms after chip reset (1000ms after wake),
+                    // ensuring the MCU UART link is fully receptive and OEM default values are overridden.
+                    backgroundHandler.postDelayed(wakeApplyRunnable, 1000);
+
+                    // Stage 3: Resume background volume polling and GPS tracking 3000ms after wake.
+                    backgroundHandler.postDelayed(wakePollGpsRunnable, 3000);
                 }
                 else if ("com.qf.action.ACC_OFF".equals(action)) {
+                    // Cancel any queued wake stages if accessory power turns off before they execute
+                    backgroundHandler.removeCallbacks(wakeResetRunnable);
+                    backgroundHandler.removeCallbacks(wakeApplyRunnable);
+                    backgroundHandler.removeCallbacks(wakePollGpsRunnable);
                     stopPolling();
                     stopGps();
                 }
@@ -675,57 +724,65 @@ public class McuService extends Service implements LocationListener {
 
         // gets the player type that is currently active
         String galavoltype = VolumeHelper.getActivePlayerType();
+        if (galavoltype == null || galavoltype.isEmpty()) {
+            galavoltype = "media_type";
+        }
 
         // if the player has changed since the last run
         if (!galavoltype.equals(galavoltype_last)) {
+            lastSourceSwitchMs = System.currentTimeMillis();
+
             // and the base volume is already established
             if (baseStandstillVolume != -1) {
-                // save the last standstill volume recorded by the algorithm
-                if (galavoltype_last.equals("media_type")) {
-                    media_standstill = baseStandstillVolume;
-                }
-                if (galavoltype_last.equals("btcall_type")) {
-                    btcall_standstill = baseStandstillVolume;
-                }
-                if (galavoltype_last.equals("aux_type")) {
-                    aux_standstill = baseStandstillVolume;
-                }
-                if (galavoltype_last.equals("radio_type")) {
-                    radio_standstill = baseStandstillVolume;
-                }
-                // set the base volume to the last known volume for this type
-                // if not known, set to current for this type
+                // save the last standstill volume recorded for the source we are leaving
+                syncCurrentStandstill(galavoltype_last, baseStandstillVolume);
+
+                // set the base volume to the last known volume for the incoming stream.
+                // If not yet recorded, read the authoritative hardware system property
+                // for that stream rather than trusting an in-flight, transient hardwareVol.
                 if (galavoltype.equals("media_type")) {
                     if (media_standstill != -1) {
                         baseStandstillVolume = media_standstill;
                     }
                     else {
-                        baseStandstillVolume = VolumeHelper.getVolume();
+                        int sysVol = getSystemPropertyInt("sys.media.vol", -1);
+                        baseStandstillVolume = (sysVol != -1) ? sysVol : VolumeHelper.getVolume();
+                        media_standstill = baseStandstillVolume;
                     }
                 }
-                if (galavoltype.equals("btcall_type")) {
+                else if (galavoltype.equals("btcall_type")) {
                     if (btcall_standstill != -1) {
                         baseStandstillVolume = btcall_standstill;
                     }
                     else {
-                        baseStandstillVolume = VolumeHelper.getVolume();
+                        int sysVol = getSystemPropertyInt("sys.call.vol", -1);
+                        baseStandstillVolume = (sysVol != -1) ? sysVol : VolumeHelper.getVolume();
+                        btcall_standstill = baseStandstillVolume;
                     }
                 }
-                if (galavoltype.equals("aux_type")) {
+                else if (galavoltype.equals("aux_type")) {
                     if (aux_standstill != -1) {
                         baseStandstillVolume = aux_standstill;
                     }
                     else {
-                        baseStandstillVolume = VolumeHelper.getVolume();
+                        int sysVol = getSystemPropertyInt("sys.aux.vol", -1);
+                        baseStandstillVolume = (sysVol != -1) ? sysVol : VolumeHelper.getVolume();
+                        aux_standstill = baseStandstillVolume;
                     }
                 }
-                if (galavoltype.equals("radio_type")) {
+                else if (galavoltype.equals("radio_type")) {
                     if (radio_standstill != -1) {
                         baseStandstillVolume = radio_standstill;
                     }
                     else {
-                        baseStandstillVolume = VolumeHelper.getVolume();
+                        int sysVol = getSystemPropertyInt("sys.radio.vol", -1);
+                        baseStandstillVolume = (sysVol != -1) ? sysVol : VolumeHelper.getVolume();
+                        radio_standstill = baseStandstillVolume;
                     }
+                }
+                else {
+                    int sysVol = getSystemPropertyInt("sys.media.vol", -1);
+                    baseStandstillVolume = (sysVol != -1) ? sysVol : VolumeHelper.getVolume();
                 }
 
                 // Push the just-restored base (+ whatever GALA offset is currently active) to
@@ -821,19 +878,29 @@ public class McuService extends Service implements LocationListener {
             pendingTargetOffset  = rawOffset;
             lastGalaTier         = rawOffset;
             tierChangeTimestamp  = System.currentTimeMillis();
+            syncCurrentStandstill(galavoltype, baseStandstillVolume);
         }
 
         // 5. MANUAL ADJUSTMENT: If the user turned the knob/steering wheel.
         // We detect this because the hardware volume changed, but NOT by our script.
-        // get the volume again so we have the freshest one
         if (hardwareVol != lastReadHardwareVol && hardwareVol != lastAppliedVolume) {
-            baseStandstillVolume = Math.max(0, hardwareVol - currentAppliedOffset);
-            if (hardwareVol < currentAppliedOffset) {
-                baseStandstillVolume = 0;
+            // Guard against audio stream transitions: if a source switch (e.g. Call -> Media) occurred
+            // within the grace period, the volume mismatch is an in-flight stream transition in hardware,
+            // NOT a user knob turn. Freeze base volume recalculation so the other stream's level
+            // is not baked into the permanent base.
+            if (System.currentTimeMillis() - lastSourceSwitchMs < SOURCE_SWITCH_GRACE_PERIOD_MS) {
+                lastReadHardwareVol = hardwareVol;
+                lastAppliedVolume = hardwareVol;
+            } else {
+                baseStandstillVolume = Math.max(0, hardwareVol - currentAppliedOffset);
+                if (hardwareVol < currentAppliedOffset) {
+                    baseStandstillVolume = 0;
+                }
+                lastAppliedVolume = hardwareVol;
+                lastUserVolumeActionMs = System.currentTimeMillis();
+                syncCurrentStandstill(galavoltype, baseStandstillVolume);
+                Log.d(TAG, "Manual Adjust: New Vol=" + hardwareVol + " -> New Base=" + baseStandstillVolume);
             }
-            lastAppliedVolume = hardwareVol;
-            lastUserVolumeActionMs = System.currentTimeMillis();
-            Log.d(TAG, "Manual Adjust: New Vol=" + hardwareVol + " -> New Base=" + baseStandstillVolume);
         }
 
         // 6. GALA APPLICATION with Hold-Timer and Fade
@@ -990,21 +1057,29 @@ public class McuService extends Service implements LocationListener {
         //    presetToLoad = prefs.getString(PREF_DEFAULT_PRESET, null);
         //}
 
-        // Process Call switch; If Call is the Player and the current Preset is not Call, queue to Call preset,
-        // save last applied preset
+        // Process Call switch: If Call is the Player and current Preset is not Call,
+        // record the active preset and switch to "Call".
         if (currentPlayer.equals("Call") && !currentPresetName.equals("Call")) {
             presetBeforeCall = currentPresetName;
             presetToLoad = "Call";
         }
-        // If Call is not the Player, queue to the preset that was active before Call if the Default preset doesn't exist
-        // or queue to Default if it does
-        else if (currentPresetName.equals("Call") && !currentPlayer.equals("Call") && presetToLoad == null) {
-            if (defaultPreset == null) {
-                presetToLoad = presetBeforeCall;
+        // Process returning from Call: When a call ends (current preset is "Call" and the new player is not "Call").
+        // Precedence:
+        // 1. If there is a preset mapped to the player that started playing after the call has ended, jump to that preset (already resolved above via playerMap.get(currentPlayer)).
+        // 2. If there is no preset assigned to that player, jump to the Default preset.
+        // 3. If there is still no Default preset specified, jump to the last active preset before the call.
+        else if (currentPresetName.equals("Call") && !currentPlayer.equals("Call")) {
+            if (presetToLoad == null) {
+                if (defaultPreset != null) {
+                    // Precedence 2: Default preset
+                    presetToLoad = defaultPreset;
+                } else if (presetBeforeCall != null) {
+                    // Precedence 3: Fall back to last active preset before call
+                    presetToLoad = presetBeforeCall;
+                }
             }
-            else {
-                presetToLoad = defaultPreset;
-            }
+            // Consume and clear presetBeforeCall now that we have returned from Call mode
+            presetBeforeCall = null;
         }
 
         // Process the switch if the current preset doesn't already match the Player.
@@ -1467,6 +1542,18 @@ public class McuService extends Service implements LocationListener {
         return "";
     }
 
+    private int getSystemPropertyInt(String key, int defaultVal) {
+        try {
+            if (getPropMethod != null) {
+                String val = (String) getPropMethod.invoke(null, key, "");
+                if (val != null && !val.trim().isEmpty()) {
+                    return Integer.parseInt(val.trim());
+                }
+            }
+        } catch (Exception ignored) {}
+        return defaultVal;
+    }
+
     private void startGps() {
         try {
             if (locationManager != null) {
@@ -1508,6 +1595,9 @@ public class McuService extends Service implements LocationListener {
     public void onDestroy() {
         super.onDestroy();
         backgroundHandler.post(() -> {
+            backgroundHandler.removeCallbacks(wakeResetRunnable);
+            backgroundHandler.removeCallbacks(wakeApplyRunnable);
+            backgroundHandler.removeCallbacks(wakePollGpsRunnable);
             if (prefs != null) prefs.unregisterOnSharedPreferenceChangeListener(prefListener);
             stopPolling();
             stopGps();

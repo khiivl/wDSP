@@ -49,17 +49,14 @@
         <receiver
             android:name="com.radiorubka.wdsp.BootReceiver"
             android:enabled="true"
-            android:exported="true"
-            android:directBootAware="true">
+            android:exported="true">
             <intent-filter android:priority="0">
+                <!-- Full boot complete: fires only after Android and all system daemons have fully initialized -->
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <!-- QuickBoot / Wake from Suspend-to-RAM -->
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
-                <action android:name="android.intent.action.REBOOT" />
-                <!-- An app update kills the service and nothing else restarts it (see
-                     BootReceiver's own doc) - without this it stays dead until the next power
-                     cycle. -->
+                <!-- App update recovery: restarts foreground service after an APK update -->
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>

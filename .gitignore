@@ -14,7 +14,6 @@
 .cxx
 local.properties
 rules.md
-agents.md
 
 # Release signing - never commit the keystore or its credentials
 /keystore.properties
