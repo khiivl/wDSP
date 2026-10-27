@@ -528,7 +528,9 @@ public class McuService extends Service implements LocationListener {
         cachedFatStartVol = prefs.getInt(preset + "_fat_start_vol", 25);
         cachedFmCal = prefs.getInt(preset + "_fm_cal", 25);
         cachedFmStr = prefs.getInt(preset + "_fm_str", 100);
-        cachedUltraBassEn = prefs.getBoolean(preset + "_ultra_bass_en", false);
+        // Ultra Bass function disabled for now
+        // cachedUltraBassEn = prefs.getBoolean(preset + "_ultra_bass_en", false);
+        cachedUltraBassEn = false;
         cachedUltraBassStartVol = prefs.getInt(preset + "_ultra_bass_start_vol", 16);
         cachedUltraBassMaxDb = prefs.getInt(preset + "_ultra_bass_max_db", 6);
 
@@ -1014,7 +1016,8 @@ public class McuService extends Service implements LocationListener {
             // MainActivity's own preview already does via the VOLUME_CHANGED broadcast below (see
             // updateFmOffsets()/updateSubwoofer(), which already handle them correctly - it was
             // only this call site gating them out).
-            if (cachedFmEn || cachedFatEn || cachedUltraBassEn) {
+            // Ultra Bass disabled for now: removed cachedUltraBassEn from volume trigger condition
+            if (cachedFmEn || cachedFatEn /* || cachedUltraBassEn */) {
                 applyVolumeDependentSettings(hardwareVol); // Update EQ/Fletcher-Munson
             }
             if (isUiVisible) {
@@ -1198,12 +1201,15 @@ public class McuService extends Service implements LocationListener {
         // "Ultra Bass" - plain linear ramp with volume, 0 at cachedUltraBassStartVol up to
         // cachedUltraBassMaxDb at volume 32, completely independent of Loudness/cachedFmEn/
         // cachedFmCal - see MainActivity.calculateUltraBassOffset() for the identical preview calc.
+        // Disabled for now.
         float ultraBassOffset = 0f;
+        /*
         if (cachedUltraBassEn && currentVol > cachedUltraBassStartVol) {
             float ubRange = Math.max(1, 32 - cachedUltraBassStartVol);
             float ubRatio = Math.min(1f, (currentVol - cachedUltraBassStartVol) / ubRange);
             ultraBassOffset = cachedUltraBassMaxDb * ubRatio;
         }
+        */
 
         int finalGainIdx = Math.max(0, Math.min(12, Math.round(cachedSubGain + subOffset + ultraBassOffset)));
         subData[1] = (byte) ((cachedSubFreq << 4) | (finalGainIdx & 0x0F));

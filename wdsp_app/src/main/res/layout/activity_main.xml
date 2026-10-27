@@ -558,12 +558,15 @@
                                 app:showText="false" />
                         </LinearLayout>
 
+                        <!-- Ultra Bass switch row - disabled for now -->
                         <LinearLayout
+                            android:id="@+id/row_switch_ultra_bass"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="12dp"
                             android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:orientation="horizontal"
+                            android:visibility="gone">
                             <TextView
                                 style="@style/TextLabel"
                                 android:layout_width="wrap_content"
@@ -900,7 +903,7 @@
                             </LinearLayout>
                         </LinearLayout>
 
-                        <!-- Ultra Bass group -->
+                        <!-- Ultra Bass group - disabled for now -->
                         <LinearLayout
                             android:id="@+id/group_ultra_bass"
                             android:orientation="vertical"

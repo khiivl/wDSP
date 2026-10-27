@@ -515,12 +515,15 @@
                             android:layout_height="wrap_content" />
                     </LinearLayout>
 
+                    <!-- Ultra Bass switch row - disabled for now -->
                     <LinearLayout
+                        android:id="@+id/row_switch_ultra_bass"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:visibility="gone">
                         <TextView
                             style="@style/TextLabel"
                             android:layout_width="0dp"
@@ -709,6 +712,14 @@
                             android:text="@string/value_default" />
                     </LinearLayout>
 
+                    <!-- Ultra Bass controls - disabled for now -->
+                    <LinearLayout
+                        android:id="@+id/group_ultra_bass"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
                     <TextView
                         style="@style/TextLabel"
                         android:layout_width="wrap_content"
@@ -781,6 +792,7 @@
                             android:layout_height="wrap_content"
                             android:gravity="end"
                             android:text="@string/value_default" />
+                    </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
             </ScrollView>

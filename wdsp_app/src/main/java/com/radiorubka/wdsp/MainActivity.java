@@ -711,6 +711,8 @@ public class MainActivity extends AppCompatActivity {
         switchFmSubComp = findViewById(R.id.switch_fm_sub_comp);
         switchShowLoudnessMain = findViewById(R.id.switch_show_loudness_main);
         switchUltraBass = findViewById(R.id.switch_ultra_bass);
+        View rowSwitchUltraBass = findViewById(R.id.row_switch_ultra_bass);
+        if (rowSwitchUltraBass != null) rowSwitchUltraBass.setVisibility(View.GONE);
         seekFmCalVol = findViewById(R.id.seek_fm_cal_vol);
         tvFmCalVolVal = findViewById(R.id.tv_fm_cal_vol_val);
         seekFmStrength = findViewById(R.id.seek_fm_strength);
@@ -1634,7 +1636,8 @@ public class MainActivity extends AppCompatActivity {
     private void updateFmGroupVisibility() {
         if (groupLoudness != null) groupLoudness.setVisibility(switchFmEnable != null && switchFmEnable.isChecked() ? View.VISIBLE : View.GONE);
         if (groupTrimHighs != null) groupTrimHighs.setVisibility(switchFatigueEnable != null && switchFatigueEnable.isChecked() ? View.VISIBLE : View.GONE);
-        if (groupUltraBass != null) groupUltraBass.setVisibility(switchUltraBass != null && switchUltraBass.isChecked() ? View.VISIBLE : View.GONE);
+        // Ultra Bass function disabled for now - keep group hidden regardless of preset switch state
+        if (groupUltraBass != null) groupUltraBass.setVisibility(View.GONE);
     }
 
     private void updateFmVisualizer() {
@@ -1757,6 +1760,8 @@ public class MainActivity extends AppCompatActivity {
      * early bootstrap, before setupFmControls() has bound these views.
      */
     private float calculateUltraBassOffset(int vol) {
+        // Ultra Bass function disabled for now
+        if (true) return 0f;
         if (switchUltraBass == null || seekUltraBassStartVol == null || seekUltraBassMaxDb == null) return 0f;
         if (!switchUltraBass.isChecked()) return 0f;
         int startVol = getIntSlider(seekUltraBassStartVol);
@@ -2356,8 +2361,10 @@ public class MainActivity extends AppCompatActivity {
         String version = getSystemProperty("persist.sys.qf.mcu.version", "");
         int deviceDate = parseVersionDate(version);
         int gateDate = parseVersionDate(AMP_POSITIVE_GATE_VERSION);
-        ampPositiveDisabled = deviceDate > 0 && gateDate > 0 && deviceDate >= gateDate;
-        Log.i(TAG, "MCU version=" + version + " ampPositiveDisabled=" + ampPositiveDisabled);
+        // Property check disabled: allow amp power adjustment (+1 to +3 dB) with newer MCU firmwares as well
+        // ampPositiveDisabled = deviceDate > 0 && gateDate > 0 && deviceDate >= gateDate;
+        ampPositiveDisabled = false;
+        Log.i(TAG, "MCU version=" + version + " ampPositiveDisabled=" + ampPositiveDisabled + " (property check disabled)");
     }
 
     /** Extracts the YYYYMMDD date segment from a "QF05.V02.14.20260703.002121"-style version string. */
