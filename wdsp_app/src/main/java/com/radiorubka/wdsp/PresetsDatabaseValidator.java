@@ -55,8 +55,10 @@ public final class PresetsDatabaseValidator {
     public static final int SUB_FREQ_MAX = DspResponse.SUB_OFF_IDX;
     public static final int SUB_FREQ_DEFAULT = 5; // 80 Hz
 
-    public static final int POWER_VOL_MIN = 0;
-    public static final int POWER_VOL_MAX = 48;
+    /** Amp Power x: boost = 27 - 3x dB, so -3 is the chip's +36 dB ceiling and 9 is 0 dB (platform/02-MCU.md).
+     * Negative is the side that adds level: a floor of 0 reset it at every start. */
+    public static final int POWER_VOL_MIN = -3;
+    public static final int POWER_VOL_MAX = 9;
     public static final int POWER_VOL_DEFAULT = 0;
 
     public static final int BASS_FILTER_MIN = 0;

@@ -1775,28 +1775,26 @@ public class MainActivity extends AppCompatActivity {
         autoSaveCurrent();
     }
 
+    /**
+     * Goes the way of every other control of a preset: the screen's value, then autoSaveCurrent. A write
+     * of its own could be overwritten by a slider's snapshot still waiting for the disk, which carries
+     * the older value of this key too.
+     */
     private void setPowerVolume(int control) {
-
-        String currentPreset = spinnerPresets.getText().toString();
-
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        String key = currentPreset + "_power_vol";
-
-        int currentVal = prefs.getInt(key, 0);
+        int currentVal = powerVol != null ? powerVol : 0;
 
         if (control == 102) {
-            currentVal = Math.max(-3, currentVal - 1); // Example range -15 to +15
+            currentVal = Math.max(PresetsDatabaseValidator.POWER_VOL_MIN, currentVal - 1);
         }
         else if (control == 101) {
-            currentVal = Math.min(9, currentVal + 1);
+            currentVal = Math.min(PresetsDatabaseValidator.POWER_VOL_MAX, currentVal + 1);
         }
         else {
             currentVal = control;
         }
 
         showPowerVol(currentVal);
-
-        prefs.edit().putInt(key, currentVal).apply();
+        autoSaveCurrent();
     }
 
     private void showPowerVol(int value) {
