@@ -263,12 +263,24 @@ public class McuService extends Service implements LocationListener {
 
                 Log.d(TAG, "[TurboSender2000] Pref Changed: " + key);
 
-                // 1. Check for Subwoofer first (specific) - _ultra_bass_* also only affects this
-                // same sub-channel write (see updateSubwoofer()).
-                if (key.contains("_sub") || key.contains("_ultra_bass")) {
+                // 1. Check the delay groups first (specific) - "_d_sub" (the sub's own time-
+                // alignment distance) contains "_sub" as a substring, so it has to be caught
+                // here before the Subwoofer branch below, or that branch's broader "_sub" check
+                // would swallow it and the new distance would be saved but never resent to the
+                // hardware (it would only reach the chip the next time something else, like
+                // toggling "_d_en", happened to call applySpatialDelays()).
+                if (key.contains("_d_")) {
+                    applySpatialDelays();
+                }
+                else if (key.contains("_d1_") || key.contains("_rsse_")) {
+                    applySurroundDelays();
+                }
+                // 2. Then Subwoofer (specific) - _ultra_bass_* also only affects this same
+                // sub-channel write (see updateSubwoofer()).
+                else if (key.contains("_sub") || key.contains("_ultra_bass")) {
                     updateSubwoofer(VolumeHelper.getVolume());
                 }
-                // 2. Then check for EQ bands or FM settings (less specific)
+                // 3. Then check for EQ bands or FM settings (less specific)
                 else if (key.contains("_g") && !key.contains("_gala") || key.contains("_q") || key.contains("_fm") || key.contains("_fat_")) {
                     updateEqWithFm(VolumeHelper.getVolume());
                     // FM calibration/strength/enable also drive updateSubwoofer()'s Sub Comp
@@ -284,12 +296,6 @@ public class McuService extends Service implements LocationListener {
                 }
                 else if (key.contains("_power_vol")) {
                     setPowerAmpVol();
-                }
-                else if (key.contains("_d_")) {
-                    applySpatialDelays();
-                }
-                else if (key.contains("_d1_") || key.contains("_rsse_")) {
-                    applySurroundDelays();
                 }
                 else if (key.contains("_bb_") || key.contains("_bf_")) {
                     applyBassBoost(VolumeHelper.getVolume());
